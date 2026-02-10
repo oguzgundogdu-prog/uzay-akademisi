@@ -76,6 +76,14 @@ export const Dashboard = () => {
                     color="bg-pink-500/20 border-pink-500/30"
                     onClick={() => navigate('/life')}
                 />
+                <MissionCard
+                    title="Gezegenleri Tanı"
+                    category="Uzay Bilimi"
+                    difficulty="Kolay"
+                    xp="+100 XP"
+                    color="bg-cyan-500/20 border-cyan-500/30"
+                    onClick={() => navigate('/science')}
+                />
             </div>
         </div>
     );

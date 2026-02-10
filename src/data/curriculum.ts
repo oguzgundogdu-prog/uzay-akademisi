@@ -67,6 +67,50 @@ export const mathCurriculum: Subject = {
                 { id: 'dur3', question: 'Hangisi daha uzun sürer?', answer: 'Yaz Tatili (3 ay)', options: ['Yaz Tatili (3 ay)', 'Yarıyıl Tatili (2 hafta)'], type: 'word-match', difficulty: 2 },
                 { id: 'dur4', question: 'Hangisi daha kısadır?', answer: 'Tenefüs (15 dk)', options: ['Ders (40 dk)', 'Tenefüs (15 dk)'], type: 'word-match', difficulty: 2 }
             ]
+        },
+        {
+            id: 'geometry',
+            title: 'Geometri',
+            description: 'Şekilleri ve özelliklerini tanı!',
+            items: [
+                { id: 'geo1', question: 'Üçgenin kaç kenarı vardır?', answer: 3, options: [3, 4, 5, 2], type: 'math', difficulty: 1 },
+                { id: 'geo2', question: 'Karenin kaç köşesi vardır?', answer: 4, options: [3, 4, 5, 6], type: 'math', difficulty: 1 },
+                { id: 'geo3', question: 'Hangisi yuvarlaktır?', answer: 'Daire', options: ['Kare', 'Üçgen', 'Daire', 'Dikdörtgen'], type: 'word-match', difficulty: 1 },
+                { id: 'geo4', question: '5 kenarı olan şekil hangisidir?', answer: 'Beşgen', options: ['Üçgen', 'Kare', 'Beşgen', 'Altıgen'], type: 'word-match', difficulty: 2 },
+                { id: 'geo5', question: 'Top hangi şekle benzer?', answer: 'Küre', options: ['Küp', 'Küre', 'Piramit', 'Silindir'], type: 'word-match', difficulty: 2 }
+            ]
+        },
+        {
+            id: 'patterns',
+            title: 'Örüntüler',
+            description: 'Sıradaki sayıyı bul!',
+            items: [
+                { id: 'pat1', question: '2, 4, 6, 8, ... Sıradaki sayı kaçtır?', answer: 10, options: [9, 10, 11, 12], type: 'math', difficulty: 1 },
+                { id: 'pat2', question: '5, 10, 15, 20, ... Sıradaki sayı kaçtır?', answer: 25, options: [21, 24, 25, 30], type: 'math', difficulty: 1 },
+                { id: 'pat3', question: '10, 20, 30, ... Sıradaki sayı kaçtır?', answer: 40, options: [35, 40, 50, 60], type: 'math', difficulty: 1 },
+                { id: 'pat4', question: '1, 2, 4, 8, ... Sıradaki sayı kaçtır?', answer: 16, options: [10, 12, 16, 20], type: 'math', difficulty: 2 },
+                { id: 'pat5', question: '20, 18, 16, 14, ... Sıradaki sayı kaçtır?', answer: 12, options: [10, 12, 13, 15], type: 'math', difficulty: 2 }
+            ]
+        }
+    ]
+};
+
+export const scienceCurriculum: Subject = {
+    id: 'science',
+    title: 'Uzay Bilimi',
+    topics: [
+        {
+            id: 'space-basics',
+            title: 'Güneş Sistemi',
+            description: 'Gezegenleri ve uzayı tanıyalım!',
+            items: [
+                { id: 'sci1', question: 'Dünyamızın ısı ve ışık kaynağı nedir?', answer: 'Güneş', options: ['Ay', 'Güneş', 'Mars', 'Yıldızlar'], type: 'word-match', difficulty: 1 },
+                { id: 'sci2', question: 'Dünyamızın uydusu hangisidir?', answer: 'Ay', options: ['Güneş', 'Ay', 'Mars', 'Venüs'], type: 'word-match', difficulty: 1 },
+                { id: 'sci3', question: 'Üzerinde yaşadığımız gezegen hangisidir?', answer: 'Dünya', options: ['Mars', 'Jüpiter', 'Dünya', 'Satürn'], type: 'word-match', difficulty: 1 },
+                { id: 'sci4', question: 'Kızıl Gezegen olarak bilinen gezegen hangisidir?', answer: 'Mars', options: ['Dünya', 'Mars', 'Venüs', 'Merkür'], type: 'word-match', difficulty: 2 },
+                { id: 'sci5', question: 'Halkası olan gezegen hangisidir?', answer: 'Satürn', options: ['Mars', 'Dünya', 'Satürn', 'Merkür'], type: 'word-match', difficulty: 2 },
+                { id: 'sci6', question: 'En büyük gezegen hangisidir?', answer: 'Jüpiter', options: ['Dünya', 'Mars', 'Jüpiter', 'Satürn'], type: 'word-match', difficulty: 2 }
+            ]
         }
     ]
 };

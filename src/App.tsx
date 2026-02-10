@@ -4,6 +4,7 @@ import { Dashboard } from './pages/Dashboard';
 import { MathGame } from './pages/math/MathGame';
 import { TurkishGame } from './pages/turkish/TurkishGame';
 import { LifeGame } from './pages/life/LifeGame';
+import { ScienceGame } from './pages/science/ScienceGame';
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
           <Route path="math" element={<MathGame />} />
           <Route path="turkish" element={<TurkishGame />} />
           <Route path="life" element={<LifeGame />} />
+          <Route path="science" element={<ScienceGame />} />
         </Route>
       </Routes>
     </BrowserRouter>
