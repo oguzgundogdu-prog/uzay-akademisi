@@ -1,0 +1,22 @@
+export const scienceQuestions = [
+    { q: "Dünyamızın şekli neye benzer?", a: "Küre", o: ["Küre", "Düz", "Kare", "Üçgen"], e: "Dünya küreye benzer, üstten biraz basıktır." },
+    { q: "Isı ve ışık kaynağımız hangisidir?", a: "Güneş", o: ["Güneş", "Ay", "Yıldızlar", "Mars"], e: "Güneş bizi ısıtır ve aydınlatır." },
+    { q: "Geceleri gökyüzünde parlayan şekil değiştiren cisim nedir?", a: "Ay", o: ["Ay", "Güneş", "Bulut", "Uçak"], e: "Ay, Dünya'nın uydusudur." },
+    { q: "Hangi mevsimde kar yağar?", a: "Kış", o: ["Kış", "Yaz", "Sonbahar", "İlkbahar"], e: "Kışın havalar soğur ve kar yağar." },
+    { q: "Ağaçlar ne zaman yaprak döker?", a: "Sonbahar", o: ["Sonbahar", "Kış", "Yaz", "İlkbahar"], e: "Sonbaharda doğa kışa hazırlanır." },
+    { q: "Yavrusunu sütle besleyen hayvan hangisidir?", a: "Kedi", o: ["Kedi", "Tavuk", "Yılan", "Balık"], e: "Memeli hayvanlar yavrularını sütle besler." },
+    { q: "Hangi hayvan suda yaşar?", a: "Balık", o: ["Balık", "Kedi", "Köpek", "Kuş"], e: "Balıklar solungaçlarıyla suda nefes alır." },
+    { q: "Bitkiler büyümek için neye ihtiyaç duyar?", a: "Su ve Güneş", o: ["Su ve Güneş", "Kola", "Karanlık", "Taş"], e: "Bitkiler fotosentez için ışığa ihtiyaç duyar." },
+    { q: "Hangisi doğal ışık kaynağıdır?", a: "Güneş", o: ["Güneş", "Ampul", "El Feneri", "Mum"], e: "Güneş kendiliğinden ışık verir." },
+    { q: "Hangisi yapay ışık kaynağıdır?", a: "Ampul", o: ["Ampul", "Güneş", "Yıldız", "Ateş Böceği"], e: "Ampulü insanlar yapmıştır." },
+    { q: "Dünya'nın kendi etrafında dönmesiyle ne oluşur?", a: "Gece ve Gündüz", o: ["Gece ve Gündüz", "Mevsimler", "Yıllar", "Aylar"], e: "Bir tam tur 24 saat sürer." },
+    { q: "Dünya'nın Güneş etrafında dönmesiyle ne oluşur?", a: "Mevsimler", o: ["Mevsimler", "Gece Gündüz", "Saatler", "Günler"], e: "Bir tam tur 1 yıl sürer." },
+    { q: "Hangisi bir duyu organımızdır?", a: "Göz", o: ["Göz", "Kalp", "Mide", "Akciğer"], e: "Gözümüzle görürüz." },
+    { q: "Yemeklerin tadını hangisiyle alırız?", a: "Dil", o: ["Dil", "Burun", "Kulak", "Göz"], e: "Dilimiz tat alma organımızdır." },
+    { q: "Hangisi kış meyvesidir?", a: "Portakal", o: ["Portakal", "Karpuz", "Çilek", "Kiraz"], e: "Portakal C vitamini deposudur." },
+    { q: "Hangisi yaz meyvesidir?", a: "Karpuz", o: ["Karpuz", "Portakal", "Mandalina", "Nar"], e: "Karpuz yazın serinletir." },
+    { q: "Su donarsa ne olur?", a: "Buz", o: ["Buz", "Buhar", "Yağmur", "Bulut"], e: "Sıvı halden katı hale geçer." },
+    { q: "Su kaynarsa ne olur?", a: "Buhar", o: ["Buhar", "Buz", "Kar", "Dolu"], e: "Sıvı halden gaz haline geçer." },
+    { q: "Hangisi canlıdır?", a: "Ağaç", o: ["Ağaç", "Taş", "Masa", "Araba"], e: "Ağaçlar büyür, beslenir ve çoğalır." },
+    { q: "Hangisi cansızdır?", a: "Taş", o: ["Taş", "Kedi", "Çiçek", "İnsan"], e: "Taşlar nefes almaz ve büyümez." }
+];

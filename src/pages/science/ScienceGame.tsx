@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
-import { Rocket, Star, ArrowLeft, Globe } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Rocket, ArrowLeft, Globe } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Button, Card, cn } from '../../components/ui/core';
 import { useGameStore } from '../../store/gameStore';
 import { scienceCurriculum } from '../../data/curriculum';
+import { GameOverlay } from '../../components/game/GameOverlay';
 
 type Question = {
     text: string;
@@ -16,13 +17,28 @@ type Question = {
 
 export const ScienceGame = () => {
     const navigate = useNavigate();
-    const { addXp } = useGameStore();
-    const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
+    const location = useLocation();
+    const { addXp, useHeart, hearts, addGem, unlockNode } = useGameStore();
+
+    const [selectedTopic, setSelectedTopic] = useState<string | null>(location.state?.topic || null);
+    const nodeId = location.state?.nodeId;
+    const isCampaign = !!nodeId;
+
     const [question, setQuestion] = useState<Question | null>(null);
     const [streak, setStreak] = useState(0);
     const [feedback, setFeedback] = useState<'correct' | 'wrong' | null>(null);
 
+    // Game State
+    const [gameState, setGameState] = useState<'playing' | 'win' | 'lose'>('playing');
+    const [questionsLeft, setQuestionsLeft] = useState(10);
+
     const generateQuestion = () => {
+        // If Campaign mode finished
+        if (isCampaign && questionsLeft <= 0) {
+            handleWin();
+            return;
+        }
+
         if (!selectedTopic) return;
 
         const topicData = scienceCurriculum.topics.find(t => t.id === selectedTopic);
@@ -41,6 +57,18 @@ export const ScienceGame = () => {
         }
     };
 
+    const handleWin = () => {
+        if (!isCampaign) return;
+        setGameState('win');
+        unlockNode(nodeId);
+        addGem(50);
+        confetti({
+            particleCount: 200,
+            spread: 70,
+            origin: { y: 0.6 }
+        });
+    };
+
     useEffect(() => {
         if (selectedTopic) {
             generateQuestion();
@@ -48,24 +76,50 @@ export const ScienceGame = () => {
     }, [selectedTopic]);
 
     const handleAnswer = (option: string | number) => {
-        if (!question) return;
+        if (!question || feedback) return;
 
         if (option === question.answer) {
             setFeedback('correct');
             setStreak(s => s + 1);
             addXp(15 + (streak * 3));
+
+            if (isCampaign) {
+                setQuestionsLeft(prev => prev - 1);
+            }
+
             confetti({
                 particleCount: 100,
                 spread: 70,
                 origin: { y: 0.6 },
                 colors: ['#00F0FF', '#BD00FF', '#FFD700']
             });
-            setTimeout(generateQuestion, 2500); // Time to read explanation
+
+            if (isCampaign && questionsLeft <= 1) {
+                setTimeout(() => handleWin(), 1500);
+            } else {
+                setTimeout(generateQuestion, 2500);
+            }
         } else {
             setFeedback('wrong');
             setStreak(0);
+
+            const hasHearts = useHeart();
+            if (!hasHearts) {
+                setGameState('lose');
+            }
         }
     };
+
+    if (gameState !== 'playing') {
+        return (
+            <GameOverlay
+                type={gameState === 'win' ? 'level-complete' : 'game-over'}
+                gemsEarned={50}
+                onRestart={() => window.location.reload()}
+                onHome={() => navigate('/')}
+            />
+        );
+    }
 
     if (!selectedTopic) {
         return (
@@ -104,20 +158,32 @@ export const ScienceGame = () => {
     if (!question) return <div>Yükleniyor...</div>;
 
     return (
-        <div className="max-w-2xl mx-auto space-y-8">
-            <div className="flex items-center justify-between">
+        <div className="max-w-2xl mx-auto space-y-8 relative">
+            <div className="flex items-center justify-between pb-4 border-b border-white/10">
                 <Button variant="secondary" onClick={() => setSelectedTopic(null)} className="gap-2">
                     <ArrowLeft size={20} />
                     Konular
                 </Button>
-                <div className="flex items-center gap-2 bg-yellow-500/20 text-yellow-500 px-4 py-2 rounded-xl border border-yellow-500/30">
-                    <Star className="fill-current" size={20} />
-                    <span className="font-bold">{streak} Seri</span>
+
+                {isCampaign && (
+                    <div className="flex-1 mx-8">
+                        <div className="h-4 bg-gray-800 rounded-full overflow-hidden">
+                            <div
+                                className="h-full bg-green-500 transition-all duration-500"
+                                style={{ width: `${((10 - questionsLeft) / 10) * 100}%` }}
+                            />
+                        </div>
+                    </div>
+                )}
+
+                <div className="flex items-center gap-2 bg-red-900/20 px-3 py-1 rounded-full border border-red-500/30">
+                    <div className="text-red-500">❤️</div>
+                    <span className="font-bold text-white">{hearts}</span>
                 </div>
             </div>
 
-            <Card className="text-center py-12 relative overflow-visible">
-                <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-space-light p-4 rounded-full border-4 border-neon-blue shadow-[0_0_30px_rgba(0,240,255,0.3)]">
+            <Card className="text-center py-12 relative overflow-visible bg-[#1A0F2E] border-neon-blue/30">
+                <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-[#1A0F2E] p-4 rounded-full border-4 border-neon-blue shadow-[0_0_30px_rgba(0,240,255,0.3)]">
                     <Rocket size={48} className="text-white animate-pulse" />
                 </div>
 
@@ -148,13 +214,13 @@ export const ScienceGame = () => {
                                 whileTap={{ scale: 0.95 }}
                                 onClick={() => handleAnswer(option)}
                                 className={cn(
-                                    "p-6 font-bold rounded-xl border-2 transition-all flex items-center justify-center",
+                                    "p-6 font-bold rounded-xl border-2 transition-all flex items-center justify-center shadow-lg",
                                     typeof option === 'string' && option.length > 15 ? "text-lg" : "text-xl",
                                     feedback === 'correct' && option === question.answer
                                         ? "bg-green-500/20 border-green-500 text-green-400"
                                         : feedback === 'wrong' && option !== question.answer
                                             ? "opacity-50"
-                                            : "bg-white/5 border-white/10 hover:border-neon-blue hover:bg-neon-blue/10"
+                                            : "bg-[#2D1B4E] border-[#4D2B8E] text-white hover:border-neon-blue hover:bg-[#3D2B6E]"
                                 )}
                                 disabled={feedback !== null}
                             >

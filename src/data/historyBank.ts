@@ -1,0 +1,22 @@
+export const historyQuestions = [
+    { q: "Türkiye Cumhuriyeti'nin kurucusu kimdir?", a: "Atatürk", o: ["Atatürk", "Fatih Sultan Mehmet", "Mevlana", "Yunus Emre"], e: "Mustafa Kemal Atatürk 1923'te Cumhuriyeti kurdu." },
+    { q: "Başkentimiz neresidir?", a: "Ankara", o: ["Ankara", "İstanbul", "İzmir", "Konya"], e: "Türkiye'nin başkenti Ankara'dır." },
+    { q: "En büyük bayramımız hangisidir?", a: "Cumhuriyet Bayramı", o: ["Cumhuriyet Bayramı", "Yılbaşı", "Hıdırellez", "Nevruz"], e: "29 Ekim'de kutlarız." },
+    { q: "İstiklal Marşı'mızın şairi kimdir?", a: "Mehmet Akif Ersoy", o: ["Mehmet Akif Ersoy", "Ömer Seyfettin", "Ziya Gökalp", "Namık Kemal"], e: "Korkma, sönmez bu şafaklarda yüzen al sancak!" },
+    { q: "İstanbul'u kim fethetti?", a: "Fatih Sultan Mehmet", o: ["Fatih Sultan Mehmet", "Yavuz Sultan Selim", "Kanuni", "Osman Bey"], e: "1453 yılında İstanbul fethedildi." },
+    { q: "Mimar Sinan'ın mesleği nedir?", a: "Mimar", o: ["Mimar", "Doktor", "Öğretmen", "Asker"], e: "Süleymaniye ve Selimiye camilerini yapmıştır." },
+    { q: "Nasrettin Hoca denince akla ne gelir?", a: "Fıkra", o: ["Fıkra", "Şiir", "Roman", "Resim"], e: "Güldürürken düşündüren hikayeleri vardır." },
+    { q: "Hacivat ile Karagöz oyunu nasıldır?", a: "Gölge Oyunu", o: ["Gölge Oyunu", "Kukla", "Tiyatro", "Sinema"], e: "Perde arkasından oynatılır." },
+    { q: "Bayrağımızda hangi renkler vardır?", a: "Kırmızı - Beyaz", o: ["Kırmızı - Beyaz", "Sarı - Lacivert", "Siyah - Beyaz", "Yeşil - Beyaz"], e: "Al bayrağımız göklerde dalgalanır." },
+    { q: "Mevlana hangi şehrimizdedir?", a: "Konya", o: ["Konya", "İstanbul", "Bursa", "Edirne"], e: "Gel, ne olursan ol yine gel." },
+    { q: "Piri Reis ne yapmıştır?", a: "Dünya Haritası", o: ["Dünya Haritası", "Uçak", "Telefon", "Ampul"], e: "Çok eski zamanlarda dünya haritasını çizmiştir." },
+    { q: "Ali Kuşçu ne ile ilgilenmiştir?", a: "Gökbilim", o: ["Gökbilim", "Tıp", "Mimar", "Spor"], e: "Yıldızları ve ayı incelemiştir." },
+    { q: "İlk kadın pilotumuz kimdir?", a: "Sabiha Gökçen", o: ["Sabiha Gökçen", "Halide Edip", "Nene Hatun", "Kara Fatma"], e: "Dünyanın ilk kadın savaş pilotudur." },
+    { q: "Çanakkale Zaferi hangi aydadır?", a: "Mart", o: ["Mart", "Ekim", "Ağustos", "Nisan"], e: "18 Mart Çanakkale Zaferi." },
+    { q: "23 Nisan'da neyi kutlarız?", a: "Çocuk Bayramı", o: ["Çocuk Bayramı", "Gençlik Bayramı", "Zafer Bayramı", "Tıp Bayramı"], e: "Dünyadaki tek çocuk bayramıdır." },
+    { q: "Anıtkabir nerededir?", a: "Ankara", o: ["Ankara", "İstanbul", "İzmir", "Samsun"], e: "Atatürk'ün kabri Ankara'dadır." },
+    { q: "Hangisi geleneksel sporumuzdur?", a: "Güreş", o: ["Güreş", "Futbol", "Basketbol", "Tenis"], e: "Yağlı güreş ata sporumuzdur." },
+    { q: "Kuran-ı Kerim hangi peygambere inmiştir?", a: "Hz. Muhammed", o: ["Hz. Muhammed", "Hz. İsa", "Hz. Musa", "Hz. İbrahim"], e: "Son peygamberimizdir." },
+    { q: "Ramazan ayında ne yaparız?", a: "Oruç tutarız", o: ["Oruç tutarız", "Kurban keseriz", "Hacca gideriz", "Denize gireriz"], e: "11 ayın sultanıdır." },
+    { q: "Misafirperverlik ne demektir?", a: "Misafiri iyi ağırlamak", o: ["Misafiri iyi ağırlamak", "Misafiri sevmemek", "Kapıyı açmamak", "Uyutmak"], e: "Türk milleti misafirperverdir." }
+];

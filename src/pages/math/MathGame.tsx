@@ -1,14 +1,16 @@
 import { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowLeft, Clock, Shapes, Calculator, Sparkles } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { Rocket, Star, ArrowLeft, Calculator, Clock, Shapes, Sparkles } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 import { Button, Card, cn } from '../../components/ui/core';
-import { useGameStore } from '../../store/gameStore';
 import { mathCurriculum } from '../../data/curriculum';
+import { useGameStore } from '../../store/gameStore';
+import { GameOverlay } from '../../components/game/GameOverlay';
+import { MathGenerator } from '../../utils/MathGenerator';
 
 type Question = {
-    text?: string; // For text based questions
+    text?: string;
     n1?: number;
     n2?: number;
     operation?: '+' | '-' | 'x' | '÷';
@@ -20,94 +22,86 @@ type Question = {
 
 export const MathGame = () => {
     const navigate = useNavigate();
-    const { addXp } = useGameStore();
-    const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
+    const location = useLocation();
+    const { addXp, useHeart, hearts, addGem, unlockNode } = useGameStore();
+
+    // Campaign Mode: topic & nodeId passed via state
+    const [selectedTopic, setSelectedTopic] = useState<string | null>(location.state?.topic || null);
+    const nodeId = location.state?.nodeId;
+    const isCampaign = !!nodeId;
+    const isPractice = location.state?.mode === 'practice';
+
     const [question, setQuestion] = useState<Question | null>(null);
-    const [streak, setStreak] = useState(0);
     const [feedback, setFeedback] = useState<'correct' | 'wrong' | null>(null);
+    const [streak, setStreak] = useState(0);
+
+    // Game State
+    const [gameState, setGameState] = useState<'playing' | 'win' | 'lose'>('playing');
+    const [questionsLeft, setQuestionsLeft] = useState(10); // 10 questions per level
 
     const generateQuestion = () => {
         if (!selectedTopic) return;
 
-        let effectiveTopicId = selectedTopic;
-
-        // Mixed Mode Logic: Randomly select a topic
-        if (selectedTopic === 'mixed') {
-            const allTopicIds = mathCurriculum.topics.map(t => t.id);
-            effectiveTopicId = allTopicIds[Math.floor(Math.random() * allTopicIds.length)];
-        }
-
-        const topicData = mathCurriculum.topics.find(t => t.id === effectiveTopicId);
-
-        // Static Curriculum Items (e.g. Time, Geometry, Patterns)
-        if (topicData && topicData.items.length > 0) {
-            const randomItem = topicData.items[Math.floor(Math.random() * topicData.items.length)];
-            const options = [...randomItem.options].sort(() => Math.random() - 0.5);
-
-            setQuestion({
-                text: randomItem.question,
-                answer: randomItem.answer,
-                options: options,
-                type: 'static',
-                explanation: randomItem.explanation
-            });
-            setFeedback(null);
+        // If Campaign mode finished
+        if (isCampaign && questionsLeft <= 0) {
+            handleWin();
             return;
         }
 
-        // Procedural Math Generation
-        let n1, n2, answer;
-        let operation: Question['operation'] = '+';
+        let newQuestion;
 
-        switch (effectiveTopicId) {
-            case 'addition':
-                operation = '+';
-                n1 = Math.floor(Math.random() * 50) + 1;
-                n2 = Math.floor(Math.random() * 40) + 1;
-                answer = n1 + n2;
-                break;
-            case 'subtraction':
-                operation = '-';
-                n1 = Math.floor(Math.random() * 50) + 10;
-                n2 = Math.floor(Math.random() * n1);
-                answer = n1 - n2;
-                break;
-            case 'multiplication':
-                operation = 'x';
-                n1 = Math.floor(Math.random() * 10) + 1;
-                n2 = Math.floor(Math.random() * 10) + 1;
-                answer = n1 * n2;
-                break;
-            case 'division':
-                operation = '÷';
-                n2 = Math.floor(Math.random() * 9) + 2; // Dilvisor 2-10
-                answer = Math.floor(Math.random() * 10) + 1; // Quotient 1-10
-                n1 = n2 * answer; // Dividend
-                break;
-            default: // Mixed or fallback
-                operation = '+';
-                n1 = 1; n2 = 1; answer = 2;
-        }
-
-        // Generate options
-        const options = new Set<number>([answer]);
-        while (options.size < 4) {
-            const offset = Math.floor(Math.random() * 10) - 5;
-            const option: number = answer + offset;
-            if (option > 0 && option !== answer) {
-                options.add(option);
+        // Use the generator based on topic
+        if (selectedTopic === 'mixed') {
+            newQuestion = MathGenerator.mixed();
+        } else if (selectedTopic === 'addition') {
+            newQuestion = MathGenerator.addition(isCampaign ? 1 : 2);
+        } else if (selectedTopic === 'subtraction') {
+            newQuestion = MathGenerator.subtraction(isCampaign ? 1 : 2);
+        } else if (selectedTopic === 'multiplication') {
+            newQuestion = MathGenerator.multiplication(isCampaign ? 1 : 2);
+        } else if (selectedTopic === 'division') {
+            newQuestion = MathGenerator.division(isCampaign ? 1 : 2);
+        } else {
+            // Fallback for other topics like patterns/geo (keep existing logic or use static data)
+            const topicData = mathCurriculum.topics.find(t => t.id === selectedTopic);
+            if (topicData && topicData.items.length > 0) {
+                const randomItem = topicData.items[Math.floor(Math.random() * topicData.items.length)];
+                setQuestion({
+                    text: randomItem.question,
+                    answer: randomItem.answer,
+                    options: [...randomItem.options].sort(() => Math.random() - 0.5),
+                    type: 'static',
+                    explanation: randomItem.explanation
+                });
+                setFeedback(null);
+                return;
             }
+            // Fallback if data missing
+            newQuestion = MathGenerator.addition(1);
         }
 
         setQuestion({
-            n1,
-            n2,
-            operation,
-            answer,
-            options: Array.from(options).sort(() => Math.random() - 0.5),
+            n1: newQuestion.n1,
+            n2: newQuestion.n2,
+            operation: newQuestion.operation,
+            text: newQuestion.text,
+            answer: newQuestion.answer,
+            options: newQuestion.options,
             type: 'procedural'
         });
         setFeedback(null);
+    };
+
+    const handleWin = () => {
+        if (!isCampaign) return;
+        setGameState('win');
+        unlockNode(nodeId);
+        addGem(50);
+        confetti({
+            particleCount: 200,
+            spread: 70,
+            origin: { y: 0.6 }
+        });
     };
 
     useEffect(() => {
@@ -116,25 +110,61 @@ export const MathGame = () => {
         }
     }, [selectedTopic]);
 
+    // Manual Advance for Practice
+    const handleNextQuestion = () => {
+        generateQuestion();
+    };
+
     const handleAnswer = (option: number | string) => {
-        if (!question) return;
+        if (!question || feedback) return;
 
         if (option === question.answer) {
             setFeedback('correct');
             setStreak(s => s + 1);
             addXp(10 + (streak * 2));
+
+            if (isCampaign) {
+                setQuestionsLeft(prev => prev - 1);
+            }
+
             confetti({
-                particleCount: 100,
-                spread: 70,
-                origin: { y: 0.6 },
+                particleCount: 30,
+                spread: 50,
+                origin: { y: 0.7 },
                 colors: ['#00F0FF', '#BD00FF', '#FFD700']
             });
-            setTimeout(generateQuestion, 2500); // 2.5s to read explanation
+
+            // Auto-advance only if NOT practice
+            if (!isPractice) {
+                if (isCampaign && questionsLeft <= 1) {
+                    setTimeout(() => handleWin(), 1500);
+                } else {
+                    setTimeout(generateQuestion, 2500);
+                }
+            }
         } else {
             setFeedback('wrong');
             setStreak(0);
+
+            if (!isPractice) {
+                const hasHearts = useHeart();
+                if (!hasHearts) {
+                    setGameState('lose');
+                }
+            }
         }
     };
+
+    if (gameState !== 'playing') {
+        return (
+            <GameOverlay
+                type={gameState === 'win' ? 'level-complete' : 'game-over'}
+                gemsEarned={50}
+                onRestart={() => window.location.reload()} // Simple restart
+                onHome={() => navigate('/')}
+            />
+        );
+    }
 
     if (!selectedTopic) {
         return (
@@ -156,7 +186,7 @@ export const MathGame = () => {
                     >
                         <div className="flex items-center gap-4 mb-4">
                             <div className="p-3 bg-pink-500/20 rounded-xl text-pink-500 group-hover:bg-pink-500 group-hover:text-white transition-colors">
-                                <Star size={32} />
+                                <Sparkles size={32} />
                             </div>
                             <h3 className="text-2xl font-bold text-white">Karışık Sınav Modu</h3>
                         </div>
@@ -191,72 +221,67 @@ export const MathGame = () => {
     if (!question) return <div>Yükleniyor...</div>;
 
     return (
-        <div className="max-w-2xl mx-auto space-y-8">
-            <div className="flex items-center justify-between">
-                <Button variant="secondary" onClick={() => setSelectedTopic(null)} className="gap-2">
+        <div className="max-w-2xl mx-auto space-y-8 relative">
+            {/* Header with Hearts/Progress */}
+            <div className="flex items-center justify-between pb-4 border-b border-white/10">
+                <Button variant="secondary" onClick={() => navigate('/')} className="gap-2">
                     <ArrowLeft size={20} />
-                    Görevler
+                    Çıkış
                 </Button>
-                <div className="flex items-center gap-2 bg-yellow-500/20 text-yellow-500 px-4 py-2 rounded-xl border border-yellow-500/30">
-                    <Star className="fill-current" size={20} />
-                    <span className="font-bold">{streak} Seri</span>
+
+                {isCampaign && (
+                    <div className="flex-1 mx-8">
+                        <div className="h-4 bg-gray-800 rounded-full overflow-hidden">
+                            <div
+                                className="h-full bg-green-500 transition-all duration-500"
+                                style={{ width: `${((10 - questionsLeft) / 10) * 100}%` }}
+                            />
+                        </div>
+                    </div>
+                )}
+
+                <div className="flex items-center gap-2 bg-red-900/20 px-3 py-1 rounded-full border border-red-500/30">
+                    <div className="text-red-500">❤️</div>
+                    <span className="font-bold text-white">{hearts}</span>
                 </div>
             </div>
 
-            <Card className="text-center py-12 relative overflow-visible">
-                <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-space-light p-4 rounded-full border-4 border-neon-blue shadow-[0_0_30px_rgba(0,240,255,0.3)]">
-                    <Rocket size={48} className="text-white animate-pulse" />
-                </div>
+            <Card className="text-center py-16 relative overflow-hidden bg-[#1A0F2E] border-purple-500/30">
+                {/* Question Content */}
+                {question.type === 'static' ? (
+                    <div className="mb-12 px-6">
+                        <h2 className="text-2xl md:text-3xl font-bold text-white leading-relaxed">
+                            {question.text}
+                        </h2>
+                    </div>
+                ) : (
+                    <div className="flex items-center justify-center gap-4 text-6xl font-bold font-mono text-white mb-12">
+                        <motion.span
+                            key={question.n1} // Force animation on change
+                            initial={{ y: -20, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                        >
+                            {question.n1}
+                        </motion.span>
+                        <span className="text-neon-blue">{question.operation}</span>
+                        <motion.span
+                            key={question.n2}
+                            initial={{ y: -20, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            transition={{ delay: 0.1 }}
+                        >
+                            {question.n2}
+                        </motion.span>
+                        <span className="text-gray-400">=</span>
+                        <span className="text-yellow-400">?</span>
+                    </div>
+                )}
 
-                <div className="mt-8 mb-12">
-                    <h2 className="text-blue-200 text-lg mb-4">
-                        {question.type === 'static' ? 'Soruyu Cevapla!' : 'İşlemi Çöz, Roketi Fırlat!'}
-                    </h2>
-
-                    {question.type === 'static' ? (
-                        <div className="min-h-[160px] flex items-center justify-center">
-                            <motion.div
-                                key={question.text}
-                                initial={{ scale: 0.9, opacity: 0 }}
-                                animate={{ scale: 1, opacity: 1 }}
-                                className="text-2xl md:text-3xl font-bold text-white max-w-lg mx-auto leading-relaxed"
-                            >
-                                {question.text}
-                            </motion.div>
-                        </div>
-                    ) : (
-                        <div className="text-7xl font-bold font-mono flex items-center justify-center gap-6 min-h-[160px]">
-                            <motion.div
-                                key={question.n1}
-                                initial={{ y: -50, opacity: 0 }}
-                                animate={{ y: 0, opacity: 1 }}
-                                className="bg-white/5 p-4 rounded-2xl"
-                            >
-                                {question.n1}
-                            </motion.div>
-                            <span className="text-neon-blue">{question.operation}</span>
-                            <motion.div
-                                key={question.n2}
-                                initial={{ y: -50, opacity: 0 }}
-                                animate={{ y: 0, opacity: 1 }}
-                                transition={{ delay: 0.1 }}
-                                className="bg-white/5 p-4 rounded-2xl"
-                            >
-                                {question.n2}
-                            </motion.div>
-                            <span className="text-gray-400">=</span>
-                            <div className="w-24 h-24 bg-white/10 rounded-2xl border-2 border-dashed border-white/20 flex items-center justify-center text-4xl text-neon-blue">
-                                ?
-                            </div>
-                        </div>
-                    )}
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 max-w-xl mx-auto">
+                <div className="grid grid-cols-2 gap-4 max-w-md mx-auto px-4">
                     <AnimatePresence mode='popLayout'>
                         {question.options.map((option, idx) => (
                             <motion.button
-                                key={`${question.type}-${idx}-${option}`}
+                                key={`${idx}-${option}`}
                                 initial={{ scale: 0.8, opacity: 0 }}
                                 animate={{ scale: 1, opacity: 1 }}
                                 transition={{ delay: idx * 0.1 }}
@@ -264,14 +289,12 @@ export const MathGame = () => {
                                 whileTap={{ scale: 0.95 }}
                                 onClick={() => handleAnswer(option)}
                                 className={cn(
-                                    "p-6 font-bold rounded-xl border-2 transition-all flex items-center justify-center",
-                                    // Adjust font size based on option length
-                                    typeof option === 'string' && option.length > 10 ? "text-lg" : "text-2xl",
+                                    "h-20 text-2xl font-bold rounded-2xl border-2 transition-all shadow-lg",
                                     feedback === 'correct' && option === question.answer
-                                        ? "bg-green-500/20 border-green-500 text-green-400"
+                                        ? "bg-green-500 border-green-400 text-white shadow-green-500/50"
                                         : feedback === 'wrong' && option !== question.answer
                                             ? "opacity-50"
-                                            : "bg-white/5 border-white/10 hover:border-neon-blue hover:bg-neon-blue/10"
+                                            : "bg-[#2D1B4E] border-[#4D2B8E] text-white hover:border-neon-blue hover:bg-[#3D2B6E]"
                                 )}
                                 disabled={feedback !== null}
                             >
@@ -293,12 +316,21 @@ export const MathGame = () => {
                             )}
                         >
                             <div>
-                                {feedback === 'correct' ? "Harika! Doğru Cevap! 🚀" : "Tekrar Dene! 🛸"}
+                                {feedback === 'correct' ? "Harika! Doğru Cevap! 📚" : `Yanlış! Doğru cevap: ${question.answer}`}
                             </div>
                             {question.explanation && (
                                 <div className="text-lg text-white/80 mt-2 font-normal">
                                     💡 {question.explanation}
                                 </div>
+                            )}
+
+                            {isPractice && (
+                                <Button
+                                    onClick={handleNextQuestion}
+                                    className="bg-neon-blue text-black hover:bg-white font-bold px-8 py-3 text-lg mt-4"
+                                >
+                                    Sıradaki Soru <ArrowLeft className="rotate-180 ml-2" />
+                                </Button>
                             )}
                         </motion.div>
                     )}

@@ -1,4 +1,17 @@
-export type QuestionType = 'math' | 'word-match' | 'fill-blank' | 'reading' | 'visual';
+import { synonyms, antonyms } from './wordBank';
+import { scienceQuestions } from './scienceBank';
+import { historyQuestions } from './historyBank';
+
+export type QuestionType = 'math' | 'word-match' | 'fill-blank' | 'reading' | 'visual' | 'word' | 'letter' | 'surah' | 'quiz' | 'matching';
+
+const generateOptions = (correct: string, sourceArray: { w: string, m: string }[]) => {
+    const opts = new Set<string>([correct]);
+    while (opts.size < 4) {
+        const random = sourceArray[Math.floor(Math.random() * sourceArray.length)].m;
+        if (random !== correct) opts.add(random);
+    }
+    return Array.from(opts).sort(() => Math.random() - 0.5);
+};
 
 export interface CurriculumItem {
     id: string;
@@ -6,7 +19,7 @@ export interface CurriculumItem {
     answer: string | number;
     options: (string | number)[];
     type: QuestionType;
-    difficulty: 1 | 2 | 3;
+    difficulty?: 1 | 2 | 3;
     explanation?: string;
     image?: string; // Optional image URL for visual questions
 }
@@ -102,17 +115,18 @@ export const scienceCurriculum: Subject = {
     title: 'Uzay Bilimi',
     topics: [
         {
-            id: 'space-basics',
-            title: 'Güneş Sistemi',
-            description: 'Gezegenleri ve uzayı tanıyalım!',
-            items: [
-                { id: 'sci1', question: 'Dünyamızın ısı ve ışık kaynağı nedir?', answer: 'Güneş', options: ['Ay', 'Güneş', 'Mars', 'Yıldızlar'], type: 'word-match', difficulty: 1, explanation: 'Güneş dev bir yıldızdır ve dünyamızı ısıtır.' },
-                { id: 'sci2', question: 'Dünyamızın uydusu hangisidir?', answer: 'Ay', options: ['Güneş', 'Ay', 'Mars', 'Venüs'], type: 'word-match', difficulty: 1, explanation: 'Ay, dünyamızın etrafında dönen tek uydudur.' },
-                { id: 'sci3', question: 'Üzerinde yaşadığımız gezegen hangisidir?', answer: 'Dünya', options: ['Mars', 'Júpiter', 'Dünya', 'Satürn'], type: 'word-match', difficulty: 1, explanation: 'Biz Dünya gezegeninde yaşıyoruz.' },
-                { id: 'sci4', question: 'Kızıl Gezegen olarak bilinen gezegen hangisidir?', answer: 'Mars', options: ['Dünya', 'Mars', 'Venüs', 'Merkür'], type: 'word-match', difficulty: 2, explanation: 'Mars yüzeyindeki paslı toprak rengi yüzünden kırmızı görünür.' },
-                { id: 'sci5', question: 'Halkası olan gezegen hangisidir?', answer: 'Satürn', options: ['Mars', 'Dünya', 'Satürn', 'Merkür'], type: 'word-match', difficulty: 2, explanation: 'Satürn\'ün buz ve taşlardan oluşan kocaman halkaları vardır.' },
-                { id: 'sci6', question: 'En büyük gezegen hangisidir?', answer: 'Júpiter', options: ['Dünya', 'Mars', 'Júpiter', 'Satürn'], type: 'word-match', difficulty: 2, explanation: 'Jüpiter, güneş sistemindeki diğer tüm gezegenlerden büyüktür.' }
-            ]
+            id: 'general-science',
+            title: 'Fen Bilimleri',
+            description: 'Uzay, Dünya ve Canlılar!',
+            items: scienceQuestions.map((item, idx) => ({
+                id: `sci-${idx}`,
+                question: item.q,
+                answer: item.a,
+                options: item.o,
+                type: 'word-match',
+                difficulty: 1,
+                explanation: item.e
+            }))
         }
     ]
 };
@@ -125,24 +139,49 @@ export const turkishCurriculum: Subject = {
             id: 'synonyms',
             title: 'Eş Anlamlılar',
             description: 'Aynı anlama gelen kelimeyi bul.',
-            items: [
-                { id: 't1', question: 'Siyah', answer: 'Kara', options: ['Kara', 'Beyaz', 'Kırmızı', 'Mavi'], type: 'word-match', difficulty: 1, explanation: 'Siyah ve Kara aynı renktir.' },
-                { id: 't2', question: 'Cevap', answer: 'Yanıt', options: ['Yanıt', 'Soru', 'Ses', 'Söz'], type: 'word-match', difficulty: 1, explanation: 'Bir soruya verilen karşılığa cevap veya yanıt denir.' },
-                { id: 't3', question: 'Konuk', answer: 'Misafir', options: ['Misafir', 'Ev', 'Komşu', 'Arkadaş'], type: 'word-match', difficulty: 1, explanation: 'Evimize gelen kişiye konuk veya misafir deriz.' },
-                { id: 't4', question: 'Hediye', answer: 'Armağan', options: ['Armağan', 'Ödül', 'Ceza', 'Para'], type: 'word-match', difficulty: 1, explanation: 'Hediyeleşmek ve armağan vermek aynı şeydir.' },
-                { id: 't5', question: 'Yıl', answer: 'Sene', options: ['Sene', 'Ay', 'Gün', 'Hafta'], type: 'word-match', difficulty: 1, explanation: 'Kaç yaşındasın demekle kaç seneliksin demek benzerdir.' }
-            ]
+            items: synonyms.map((item, idx) => ({
+                id: `syn-${idx}`,
+                question: item.w,
+                answer: item.m,
+                options: generateOptions(item.m, synonyms),
+                type: 'word-match',
+                difficulty: 1
+            }))
         },
         {
             id: 'antonyms',
             title: 'Zıt Anlamlılar',
-            description: 'Tam tersini bul.',
+            description: 'Kelimelerin zıt anlamlılarını bul!',
+            items: antonyms.map((item, idx) => ({
+                id: `ant-${idx}`,
+                question: item.w,
+                answer: item.m,
+                options: generateOptions(item.m, antonyms),
+                type: 'word-match',
+                difficulty: 1
+            }))
+        },
+        {
+            id: 'reading',
+            title: 'Okuma - Anlama',
+            description: 'Metni oku, soruları cevapla.',
             items: [
-                { id: 't6', question: 'Büyük', answer: 'Küçük', options: ['Küçük', 'İri', 'Kocaman', 'Geniş'], type: 'word-match', difficulty: 1, explanation: 'Büyüğün tam tersi küçüktür.' },
-                { id: 't7', question: 'Ağır', answer: 'Hafif', options: ['Hafif', 'Zor', 'Güçlü', 'Sert'], type: 'word-match', difficulty: 1, explanation: 'Kuş tüyü hafiftir, taş ağırdır.' },
-                { id: 't8', question: 'Gel', answer: 'Git', options: ['Git', 'Koş', 'Dur', 'Bak'], type: 'word-match', difficulty: 1, explanation: 'Gelmek yaklaşmak, gitmek uzaklaşmaktır.' },
-                { id: 't9', question: 'Erken', answer: 'Geç', options: ['Geç', 'Hızlı', 'Yavaş', 'Zaman'], type: 'word-match', difficulty: 1, explanation: 'Okula erken gitmelisin, geç kalma.' },
-                { id: 't10', question: 'Taze', answer: 'Bayat', options: ['Bayat', 'Yeni', 'Sıcak', 'Soğuk'], type: 'word-match', difficulty: 1, explanation: 'Ekmek fırından yeni çıkınca tazedir, bekleyince bayatlar.' }
+                {
+                    id: 'read-1',
+                    question: 'Nasrettin Hoca bir gün göle maya çalmış. Görenler şaşırmış. Hoca ne demiş?',
+                    answer: 'Ya tutarsa!',
+                    options: ['Göle yoğurt dökülmez', 'Ya tutarsa!', 'Balık tutuyorum', 'Yüzüyorum'],
+                    type: 'reading',
+                    difficulty: 2
+                },
+                {
+                    id: 'read-2',
+                    question: 'Hacivat ile Karagöz hangi şehrimizin simgesidir?',
+                    answer: 'Bursa',
+                    options: ['İstanbul', 'Bursa', 'Ankara', 'Konya'],
+                    type: 'reading',
+                    difficulty: 2
+                }
             ]
         }
     ]
@@ -153,71 +192,161 @@ export const socialCurriculum: Subject = {
     title: 'Tarih ve Kültür',
     topics: [
         {
-            id: 'scientists',
-            title: 'Müslüman Bilim Adamları',
-            description: 'Tarihimize yön veren büyük isimleri tanı!',
+            id: 'general-history',
+            title: 'Tarih ve Kültür',
+            description: 'Tarihimiz, Kültürümüz ve Değerlerimiz.',
+            items: historyQuestions.map((item, idx) => ({
+                id: `hist-${idx}`,
+                question: item.q,
+                answer: item.a,
+                options: item.o,
+                type: 'reading',
+                difficulty: 1,
+                explanation: item.e
+            }))
+        }
+    ]
+};
+
+export const religiousCurriculum: Subject = {
+    id: 'religion',
+    title: 'Kuran ve Değerler',
+    topics: [
+        {
+            id: 'elif-ba',
+            title: 'Elif-Ba Cüzü',
+            description: 'Kuran harflerini tanıyalım',
+            items: [
+                { id: 'eb-1', question: 'ا', answer: 'Elif', options: ['Elif', 'Be', 'Te', 'Se'], type: 'letter' },
+                { id: 'eb-2', question: 'ب', answer: 'Be', options: ['Be', 'Te', 'Se', 'Cim'], type: 'letter' },
+                { id: 'eb-3', question: 'ت', answer: 'Te', options: ['Te', 'Be', 'Se', 'Ha'], type: 'letter' },
+                { id: 'eb-4', question: 'ث', answer: 'Se', options: ['Se', 'Cim', 'Ha', 'Hı'], type: 'letter' },
+                { id: 'eb-5', question: 'ج', answer: 'Cim', options: ['Cim', 'Ha', 'Hı', 'Dal'], type: 'letter' },
+                { id: 'eb-6', question: 'ح', answer: 'Ha', options: ['Ha', 'Cim', 'Hı', 'Zal'], type: 'letter' },
+                { id: 'eb-7', question: 'خ', answer: 'Hı', options: ['Hı', 'Ha', 'Cim', 'Ra'], type: 'letter' },
+                { id: 'eb-8', question: 'د', answer: 'Dal', options: ['Dal', 'Zal', 'Ra', 'Ze'], type: 'letter' },
+                { id: 'eb-9', question: 'ذ', answer: 'Zal', options: ['Zal', 'Dal', 'Ra', 'Ze'], type: 'letter' },
+                { id: 'eb-10', question: 'ر', answer: 'Ra', options: ['Ra', 'Ze', 'Sin', 'Şın'], type: 'letter' },
+                { id: 'eb-11', question: 'ز', answer: 'Ze', options: ['Ze', 'Ra', 'Sin', 'Şın'], type: 'letter' },
+                { id: 'eb-12', question: 'س', answer: 'Sin', options: ['Sin', 'Şın', 'Sad', 'Dad'], type: 'letter' },
+                { id: 'eb-13', question: 'ش', answer: 'Şın', options: ['Şın', 'Sin', 'Sad', 'Dad'], type: 'letter' },
+                { id: 'eb-14', question: 'ص', answer: 'Sad', options: ['Sad', 'Dad', 'Tı', 'Zı'], type: 'letter' },
+                { id: 'eb-15', question: 'ض', answer: 'Dad', options: ['Dad', 'Sad', 'Tı', 'Zı'], type: 'letter' },
+                { id: 'eb-16', question: 'ط', answer: 'Tı', options: ['Tı', 'Zı', 'Ayn', 'Gayn'], type: 'letter' },
+                { id: 'eb-17', question: 'ظ', answer: 'Zı', options: ['Zı', 'Tı', 'Ayn', 'Gayn'], type: 'letter' },
+                { id: 'eb-18', question: 'ع', answer: 'Ayn', options: ['Ayn', 'Gayn', 'Fe', 'Kaf'], type: 'letter' },
+                { id: 'eb-19', question: 'غ', answer: 'Gayn', options: ['Gayn', 'Ayn', 'Fe', 'Kaf'], type: 'letter' },
+                { id: 'eb-20', question: 'ف', answer: 'Fe', options: ['Fe', 'Kaf', 'Kef', 'Lam'], type: 'letter' },
+                { id: 'eb-21', question: 'ق', answer: 'Kaf', options: ['Kaf', 'Fe', 'Kef', 'Lam'], type: 'letter' },
+                { id: 'eb-22', question: 'ك', answer: 'Kef', options: ['Kef', 'Lam', 'Mim', 'Nun'], type: 'letter' },
+                { id: 'eb-23', question: 'ل', answer: 'Lam', options: ['Lam', 'Kef', 'Mim', 'Nun'], type: 'letter' },
+                { id: 'eb-24', question: 'م', answer: 'Mim', options: ['Mim', 'Nun', 'Vav', 'He'], type: 'letter' },
+                { id: 'eb-25', question: 'ن', answer: 'Nun', options: ['Nun', 'Mim', 'Vav', 'He'], type: 'letter' },
+                { id: 'eb-26', question: 'و', answer: 'Vav', options: ['Vav', 'He', 'Lam', 'Ye'], type: 'letter' },
+                { id: 'eb-27', question: 'ه', answer: 'He', options: ['He', 'Vav', 'Lam', 'Ye'], type: 'letter' },
+                { id: 'eb-28', question: 'ي', answer: 'Ye', options: ['Ye', 'He', 'Vav', 'Lam'], type: 'letter' }
+            ]
+        },
+        {
+            id: 'surahs',
+            title: 'Namaz Sureleri',
+            description: 'Son 10 Sureyi Öğren',
             items: [
                 {
-                    id: 'sci-ali',
-                    question: 'Ay\'ın haritasını çıkaran ve Fatih Sultan Mehmet zamanında İstanbul\'a gelen büyük gökbilimci kimdir?',
-                    answer: 'Ali Kuşçu',
-                    options: ['Ali Kuşçu', 'Piri Reis', 'Mimar Sinan', 'İbn-i Sina'],
-                    type: 'reading',
-                    difficulty: 2,
-                    explanation: 'Ali Kuşçu, Ayasofya medresesinde müderrislik yapmış büyük bir matematikçi ve astronomdur.'
+                    id: 'fil',
+                    question: 'Elem tera keyfe fe\'ale rabbüke bi-ashâbil fîl...',
+                    answer: 'Fil Suresi',
+                    options: ['Fil Suresi', 'Kureyş Suresi', 'Maun Suresi', 'Kevser Suresi'],
+                    explanation: 'Fil Ordusu\'nun ebabil kuşları tarafından yenilmesini anlatır.',
+                    type: 'surah'
                 },
                 {
-                    id: 'sci-piri',
-                    question: 'Dünya haritasını çizen ünlü Türk denizcisi kimdir?',
-                    answer: 'Piri Reis',
-                    options: ['Barbaros Hayrettin', 'Piri Reis', 'Seydi Ali', 'Oruç Reis'],
-                    type: 'reading',
-                    difficulty: 2,
-                    explanation: 'Piri Reis, Kitab-ı Bahriye adlı eseri ve çizdiği dünya haritası ile tanınır.'
+                    id: 'quraysh',
+                    question: 'Li-îlâfi Kureyş. Îlâfihim rihlete\'ş-şitâi ve\'s-sayf...',
+                    answer: 'Kureyş Suresi',
+                    options: ['Kureyş Suresi', 'Fil Suresi', 'Maun Suresi', 'Tebbet Suresi'],
+                    explanation: 'Kureyş kabilesine verilen nimetleri hatırlatır.',
+                    type: 'surah'
                 },
                 {
-                    id: 'sci-sinan',
-                    question: 'Süleymaniye ve Selimiye camilerini yapan, "Koca Sinan" lakaplı mimarımız kimdir?',
-                    answer: 'Mimar Sinan',
-                    options: ['Mimar Sinan', 'Mimar Kemaleddin', 'Sedefkar Mehmet', 'Balyan Kardeşler'],
-                    type: 'reading',
-                    difficulty: 1,
-                    explanation: 'Mimar Sinan, Osmanlı İmparatorluğu\'nun baş mimarıdır ve yüzlerce eseri vardır.'
+                    id: 'maun',
+                    question: 'Eraeytellezî yükezzibü bi\'d-dîn. Fezâlikellezî yedü\'u\'l-yetîm...',
+                    answer: 'Maun Suresi',
+                    options: ['Maun Suresi', 'Kevser Suresi', 'Kafirun Suresi', 'Nasr Suresi'],
+                    explanation: 'Yardıma engel olanlardan ve gösteriş yapanlardan bahseder.',
+                    type: 'surah'
                 },
                 {
-                    id: 'sci-ibni',
-                    question: '"Tıbbın Babası" olarak bilinen ve yazdığı tıp kitapları Avrupa\'da yüzyıllarca okutulan bilim adamı kimdir?',
-                    answer: 'İbn-i Sina',
-                    options: ['Farabi', 'İbn-i Sina', 'Biruni', 'Harezmi'],
-                    type: 'reading',
-                    difficulty: 2,
-                    explanation: 'İbn-i Sina (Avicenna), El-Kanun fi\'t-Tıb kitabının yazarıdır.'
+                    id: 'kawthar',
+                    question: 'İnnâ a\'taynâ ke\'l-kevser. Fesalli li-rabbike venhar...',
+                    answer: 'Kevser Suresi',
+                    options: ['Kevser Suresi', 'Maun Suresi', 'İhlas Suresi', 'Felak Suresi'],
+                    explanation: 'Kuran\'daki en kısa suredir. Peygamberimize Kevser havuzunun müjdesini verir.',
+                    type: 'surah'
+                },
+                {
+                    id: 'kafirun',
+                    question: 'Kul yâ eyyühe\'l-kâfirûn. Lâ a\'büdü mâ ta\'büdûn...',
+                    answer: 'Kafirun Suresi',
+                    options: ['Kafirun Suresi', 'Nasr Suresi', 'Tebbet Suresi', 'İhlas Suresi'],
+                    explanation: 'İnançta taviz verilmeyeceğini anlatır atar. "Sizin dininiz size, benim dinim banadır."',
+                    type: 'surah'
+                },
+                {
+                    id: 'nasr',
+                    question: 'İzâ câe nasrullâhi ve\'l-feth. Ve raeyte\'n-nâse...',
+                    answer: 'Nasr Suresi',
+                    options: ['Nasr Suresi', 'Tebbet Suresi', 'Kafirun Suresi', 'İhlas Suresi'],
+                    explanation: 'Allah\'ın yardımının ve fethin geldiğini müjdeler.',
+                    type: 'surah'
+                },
+                {
+                    id: 'tabbet',
+                    question: 'Tebbet yedâ ebî lehebin ve tebb. Mâ ağnâ anhü mâlühü...',
+                    answer: 'Tebbet Suresi',
+                    options: ['Tebbet Suresi', 'Nasr Suresi', 'Fil Suresi', 'Kureyş Suresi'],
+                    explanation: 'Ebu Leheb\'in İslam düşmanlığını ve cezasını anlatır.',
+                    type: 'surah'
+                },
+                {
+                    id: 'ikhlas',
+                    question: 'Kul hüvallâhü ehad. Allâhü\'s-samed...',
+                    answer: 'İhlas Suresi',
+                    options: ['İhlas Suresi', 'Felak Suresi', 'Nas Suresi', 'Fatiha Suresi'],
+                    explanation: 'Allah\'ın birliğini (Tevhid) en güzel anlatan suredir.',
+                    type: 'surah'
+                },
+                {
+                    id: 'falaq',
+                    question: 'Kul e\'ûzü bi-rabbi\'l-felak. Min şerri mâ halak...',
+                    answer: 'Felak Suresi',
+                    options: ['Felak Suresi', 'Nas Suresi', 'İhlas Suresi', 'Tebbet Suresi'],
+                    explanation: 'Kötülüklerden ve hasetçilerin şerrinden Allah\'a sığınmayı öğretir.',
+                    type: 'surah'
+                },
+                {
+                    id: 'nas',
+                    question: 'Kul e\'ûzü bi-rabbi\'n-nâs. Meliki\'n-nâs. İlâhi\'n-nâs...',
+                    answer: 'Nas Suresi',
+                    options: ['Nas Suresi', 'Felak Suresi', 'İhlas Suresi', 'Kevser Suresi'],
+                    explanation: 'İnsanların ve cinlerin vesvesesinden Allah\'a sığınmayı öğretir.',
+                    type: 'surah'
                 }
             ]
         },
         {
-            id: 'culture',
-            title: 'Kültürümüz',
-            description: 'Geleneklerimiz ve değerlerimiz.',
+            id: 'prophets',
+            title: 'Peygamberler Tarihi',
+            description: 'Peygamberlerin hayatından dersler',
             items: [
-                {
-                    id: 'cult-golge',
-                    question: 'Perde arkasında oynatılan, biri bilgili diğeri halktan iki karakterin atışmasına dayanan gölge oyunumuz nedir?',
-                    answer: 'Hacivat ve Karagöz',
-                    options: ['Keloğlan', 'Nasreddin Hoca', 'Hacivat ve Karagöz', 'Meddah'],
-                    type: 'reading',
-                    difficulty: 1,
-                    explanation: 'Hacivat ve Karagöz, geleneksel Türk gölge oyununun en önemli karakterleridir.'
-                },
-                {
-                    id: 'cult-sadaka',
-                    question: 'Osmanlı\'da zenginlerin para bıraktığı, ihtiyacı olanın ise sadece ihtiyacı kadarını aldığı taşın adı nedir?',
-                    answer: 'Sadaka Taşı',
-                    options: ['Mola Taşı', 'Sadaka Taşı', 'Nişan Taşı', 'Musalla Taşı'],
-                    type: 'reading',
-                    difficulty: 2,
-                    explanation: 'Sadaka taşları, Osmanlı\'da yardımlaşmanın ne kadar zarif yapıldığının göstergesidir.'
-                }
+                { id: 'prop-1', question: 'İlk insan ve ilk peygamber kimdir?', answer: 'Hz. Adem', options: ['Hz. Adem', 'Hz. Nuh', 'Hz. İbrahim', 'Hz. Muhammed'], type: 'quiz' },
+                { id: 'prop-2', question: 'Hangi peygamber gemi yaparak insanları tufandan kurtarmıştır?', answer: 'Hz. Nuh', options: ['Hz. Nuh', 'Hz. Musa', 'Hz. İsa', 'Hz. Yunus'], type: 'quiz' },
+                { id: 'prop-3', question: 'Ateşe atıldığında ateşin yakmadığı peygamber kimdir?', answer: 'Hz. İbrahim', options: ['Hz. İbrahim', 'Hz. İsmail', 'Hz. Yusuf', 'Hz. Yakub'], type: 'quiz' },
+                { id: 'prop-4', question: 'Balığın karnında dua eden peygamber kimdir?', answer: 'Hz. Yunus', options: ['Hz. Yunus', 'Hz. Yusuf', 'Hz. Musa', 'Hz. Harun'], type: 'quiz' },
+                { id: 'prop-5', question: 'Son peygamber kimdir?', answer: 'Hz. Muhammed (s.a.v)', options: ['Hz. Muhammed (s.a.v)', 'Hz. İsa', 'Hz. Musa', 'Hz. İbrahim'], type: 'quiz' },
+                { id: 'prop-6', question: 'Hz. Muhammed\'in (s.a.v) doğduğu şehir hangisidir?', answer: 'Mekke', options: ['Mekke', 'Medine', 'Kudüs', 'Şam'], type: 'quiz' },
+                { id: 'prop-7', question: 'Kuran-ı Kerim hangi peygambere indirilmiştir?', answer: 'Hz. Muhammed (s.a.v)', options: ['Hz. Muhammed (s.a.v)', 'Hz. İsa', 'Hz. Musa', 'Hz. Davud'], type: 'quiz' },
+                { id: 'prop-8', question: 'Sabır taşı olarak bilinen ve hastalığına sabreden peygamber kimdir?', answer: 'Hz. Eyyüb', options: ['Hz. Eyyüb', 'Hz. Yusuf', 'Hz. Yakub', 'Hz. Süleyman'], type: 'quiz' }
             ]
         }
     ]

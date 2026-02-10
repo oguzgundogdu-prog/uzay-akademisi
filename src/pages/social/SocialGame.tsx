@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
-import { BookOpen, Star, ArrowLeft, Scroll, Feather } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { BookOpen, ArrowLeft, Scroll, Feather } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Button, Card, cn } from '../../components/ui/core';
 import { useGameStore } from '../../store/gameStore';
 import { socialCurriculum } from '../../data/curriculum';
+import { GameOverlay } from '../../components/game/GameOverlay';
 
 type Question = {
     id: string;
@@ -17,13 +18,29 @@ type Question = {
 
 export const SocialGame = () => {
     const navigate = useNavigate();
-    const { addXp, markQuestionSeen } = useGameStore();
-    const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
+    const location = useLocation();
+    const { addXp, markQuestionSeen, useHeart, hearts, addGem, unlockNode } = useGameStore();
+
+    const [selectedTopic, setSelectedTopic] = useState<string | null>(location.state?.topic || null);
+    const nodeId = location.state?.nodeId;
+    const isCampaign = !!nodeId;
+    const isPractice = location.state?.mode === 'practice';
+
     const [question, setQuestion] = useState<Question | null>(null);
     const [streak, setStreak] = useState(0);
     const [feedback, setFeedback] = useState<'correct' | 'wrong' | null>(null);
 
+    // Game State
+    const [gameState, setGameState] = useState<'playing' | 'win' | 'lose'>('playing');
+    const [questionsLeft, setQuestionsLeft] = useState(10);
+
     const generateQuestion = () => {
+        // If Campaign mode finished
+        if (isCampaign && questionsLeft <= 0) {
+            handleWin();
+            return;
+        }
+
         if (!selectedTopic) return;
 
         const topicData = socialCurriculum.topics.find(t => t.id === selectedTopic);
@@ -43,32 +60,81 @@ export const SocialGame = () => {
         }
     };
 
+    const handleWin = () => {
+        if (!isCampaign) return;
+        setGameState('win');
+        unlockNode(nodeId);
+        addGem(50);
+        confetti({
+            particleCount: 200,
+            spread: 70,
+            origin: { y: 0.6 },
+            colors: ['#D4AF37', '#C0C0C0', '#CD7F32']
+        });
+    };
+
     useEffect(() => {
         if (selectedTopic) {
             generateQuestion();
         }
     }, [selectedTopic]);
 
+    // Manual Advance for Practice Mode
+    const handleNextQuestion = () => {
+        generateQuestion();
+    };
+
     const handleAnswer = (option: string | number) => {
-        if (!question) return;
+        if (!question || feedback) return;
 
         if (option === question.answer) {
             setFeedback('correct');
             setStreak(s => s + 1);
-            addXp(20 + (streak * 5)); // Higher XP for reading tasks
+            addXp(20 + (streak * 5));
             markQuestionSeen(question.id);
+
+            if (isCampaign) {
+                setQuestionsLeft(prev => prev - 1);
+            }
+
             confetti({
                 particleCount: 100,
                 spread: 70,
                 origin: { y: 0.6 },
-                colors: ['#D4AF37', '#C0C0C0', '#CD7F32'] // Gold, Silver, Bronze colors for history
+                colors: ['#D4AF37', '#C0C0C0', '#CD7F32']
             });
-            setTimeout(generateQuestion, 3500); // Longer time to read explanation
+
+            // Auto-advance only if NOT practice (practice waits for user to read)
+            if (!isPractice) {
+                if (isCampaign && questionsLeft <= 1) {
+                    setTimeout(() => handleWin(), 1500);
+                } else {
+                    setTimeout(generateQuestion, 3500);
+                }
+            }
         } else {
             setFeedback('wrong');
             setStreak(0);
+
+            if (!isPractice) {
+                const hasHearts = useHeart();
+                if (!hasHearts) {
+                    setGameState('lose');
+                }
+            }
         }
     };
+
+    if (gameState !== 'playing') {
+        return (
+            <GameOverlay
+                type={gameState === 'win' ? 'level-complete' : 'game-over'}
+                gemsEarned={50}
+                onRestart={() => window.location.reload()}
+                onHome={() => navigate('/')}
+            />
+        );
+    }
 
     if (!selectedTopic) {
         return (
@@ -108,15 +174,27 @@ export const SocialGame = () => {
     if (!question) return <div>Yükleniyor...</div>;
 
     return (
-        <div className="max-w-3xl mx-auto space-y-8">
-            <div className="flex items-center justify-between">
+        <div className="max-w-3xl mx-auto space-y-8 relative">
+            <div className="flex items-center justify-between pb-4 border-b border-[#D4AF37]/20">
                 <Button variant="secondary" onClick={() => setSelectedTopic(null)} className="gap-2">
                     <ArrowLeft size={20} />
                     Konular
                 </Button>
-                <div className="flex items-center gap-2 bg-[#D4AF37]/20 text-[#D4AF37] px-4 py-2 rounded-xl border border-[#D4AF37]/30">
-                    <Star className="fill-current" size={20} />
-                    <span className="font-bold">{streak} Seri</span>
+
+                {isCampaign && (
+                    <div className="flex-1 mx-8">
+                        <div className="h-4 bg-[#1A0F08] rounded-full overflow-hidden border border-[#D4AF37]/20">
+                            <div
+                                className="h-full bg-[#D4AF37] transition-all duration-500"
+                                style={{ width: `${((10 - questionsLeft) / 10) * 100}%` }}
+                            />
+                        </div>
+                    </div>
+                )}
+
+                <div className="flex items-center gap-2 bg-red-900/20 px-3 py-1 rounded-full border border-red-500/30">
+                    <div className="text-red-500">❤️</div>
+                    <span className="font-bold text-white">{hearts}</span>
                 </div>
             </div>
 
@@ -180,9 +258,18 @@ export const SocialGame = () => {
                                 {feedback === 'correct' ? "Harika! Tarih Bilgin Çok İyi! 📜" : "Tekrar Dene, Öğreniyorsun! 🕯️"}
                             </div>
                             {question.explanation && (
-                                <div className="text-lg text-[#F5DEB3]/90 font-serif font-normal italic">
+                                <div className="text-lg text-[#F5DEB3]/90 font-serif font-normal italic mb-4">
                                     💡 "{question.explanation}"
                                 </div>
+                            )}
+
+                            {isPractice && (
+                                <Button
+                                    onClick={handleNextQuestion}
+                                    className="bg-[#D4AF37] text-[#2D1B0E] hover:bg-[#F5DEB3] font-bold px-8 py-3 text-lg"
+                                >
+                                    Sıradaki Soru <ArrowLeft className="rotate-180 ml-2" />
+                                </Button>
                             )}
                         </motion.div>
                     )}

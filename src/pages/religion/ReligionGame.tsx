@@ -1,33 +1,27 @@
+
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
-import { BookOpen, ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Star, Heart } from 'lucide-react'; // Changed icons for variety
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button, Card, cn } from '../../components/ui/core';
 import { useGameStore } from '../../store/gameStore';
-import { turkishCurriculum } from '../../data/curriculum';
+import { religiousCurriculum } from '../../data/curriculum'; // Import the new curriculum
 import { GameOverlay } from '../../components/game/GameOverlay';
 
-type WordPair = {
+type QuestionItem = {
     id: string;
-    word: string;
-    match: string;
-    options: string[];
-    type: 'synonym' | 'antonym' | 'reading';
+    question: string;
+    answer: string | number;
+    options: (string | number)[];
+    type: string;
     explanation?: string;
 };
 
-// Flatten all words initially
-const allWordData: WordPair[] = turkishCurriculum.topics.flatMap(t => t.items.map(i => ({
-    id: i.id,
-    word: i.question,
-    match: i.answer as string,
-    options: i.options as string[],
-    type: t.id === 'synonyms' ? 'synonym' : t.id === 'antonyms' ? 'antonym' : 'reading',
-    explanation: i.explanation
-})));
+// Flatten data
+const allRelData: QuestionItem[] = religiousCurriculum.topics.flatMap(t => t.items);
 
-export const TurkishGame = () => {
+export const ReligionGame = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const { addXp, useHeart, hearts, addGem, unlockNode } = useGameStore();
@@ -36,34 +30,34 @@ export const TurkishGame = () => {
     const nodeId = location.state?.nodeId;
     const isCampaign = !!nodeId;
 
-    const [currentPair, setCurrentPair] = useState<WordPair | null>(null);
-    const [options, setOptions] = useState<string[]>([]);
+    const [currentQuestion, setCurrentQuestion] = useState<QuestionItem | null>(null);
+    const [options, setOptions] = useState<(string | number)[]>([]);
     const [streak, setStreak] = useState(0);
     const [feedback, setFeedback] = useState<'correct' | 'wrong' | null>(null);
 
-    // Game State
     const [gameState, setGameState] = useState<'playing' | 'win' | 'lose'>('playing');
     const [questionsLeft, setQuestionsLeft] = useState(10);
 
     const generateQuestion = () => {
-        // If Campaign mode finished
         if (isCampaign && questionsLeft <= 0) {
             handleWin();
             return;
         }
 
-        let availableWords = allWordData;
+        let available = allRelData;
         if (selectedTopic) {
-            if (selectedTopic === 'synonyms') availableWords = allWordData.filter(w => w.type === 'synonym');
-            else if (selectedTopic === 'antonyms') availableWords = allWordData.filter(w => w.type === 'antonym');
-            // 'reading' is handled differently usually, but if structure is same, use it.
-            // If no match found (e.g. topic is 'reading' but we have no reading words mapped yet), use all.
-            if (availableWords.length === 0) availableWords = allWordData;
+            // Simple filtering based on topic ID from mapData matching curriculum topic IDs
+            // We might need to ensure mapData topicIds matches curriculum 'id's or we filter by checking item IDs prefix
+            if (selectedTopic === 'elif-ba') available = religiousCurriculum.topics.find(t => t.id === 'elif-ba')?.items || [];
+            else if (selectedTopic === 'prophets') available = religiousCurriculum.topics.find(t => t.id === 'prophets')?.items || [];
         }
 
-        const randomPair = availableWords[Math.floor(Math.random() * availableWords.length)];
-        setCurrentPair(randomPair);
-        setOptions([...randomPair.options].sort(() => Math.random() - 0.5));
+        if (available.length === 0) available = allRelData;
+
+        const randomQ = available[Math.floor(Math.random() * available.length)];
+        setCurrentQuestion(randomQ);
+        // Shuffle options
+        setOptions([...randomQ.options].sort(() => Math.random() - 0.5));
         setFeedback(null);
     };
 
@@ -75,7 +69,8 @@ export const TurkishGame = () => {
         confetti({
             particleCount: 200,
             spread: 70,
-            origin: { y: 0.6 }
+            origin: { y: 0.6 },
+            colors: ['#4CAF50', '#FFC107', '#FFFFFF'] // Green/Gold/White
         });
     };
 
@@ -83,13 +78,13 @@ export const TurkishGame = () => {
         generateQuestion();
     }, []);
 
-    const handleAnswer = (selectedOption: string) => {
-        if (!currentPair || feedback) return;
+    const handleAnswer = (selectedOption: string | number) => {
+        if (!currentQuestion || feedback) return;
 
-        if (selectedOption === currentPair.match) {
+        if (selectedOption === currentQuestion.answer) {
             setFeedback('correct');
             setStreak(s => s + 1);
-            addXp(15 + (streak * 3));
+            addXp(20 + (streak * 5));
 
             if (isCampaign) {
                 setQuestionsLeft(prev => prev - 1);
@@ -99,7 +94,7 @@ export const TurkishGame = () => {
                 particleCount: 100,
                 spread: 70,
                 origin: { y: 0.6 },
-                colors: ['#BD00FF', '#FFD700', '#F472B6']
+                colors: ['#4CAF50']
             });
 
             if (isCampaign && questionsLeft <= 1) {
@@ -129,7 +124,7 @@ export const TurkishGame = () => {
         );
     }
 
-    if (!currentPair) return <div className="text-white text-center mt-20">Yükleniyor...</div>;
+    if (!currentQuestion) return <div className="text-center text-white mt-20">Yükleniyor...</div>;
 
     return (
         <div className="max-w-2xl mx-auto space-y-8 relative">
@@ -151,30 +146,36 @@ export const TurkishGame = () => {
                 )}
 
                 <div className="flex items-center gap-2 bg-red-900/20 px-3 py-1 rounded-full border border-red-500/30">
-                    <div className="text-red-500">❤️</div>
+                    <Heart className="text-red-500 fill-red-500" size={20} />
                     <span className="font-bold text-white">{hearts}</span>
                 </div>
             </div>
 
-            <Card className="text-center py-12 relative overflow-visible bg-[#1A0F2E] border-purple-500/30">
-                <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-[#1A0F2E] p-4 rounded-full border-4 border-purple-500 shadow-[0_0_30px_rgba(189,0,255,0.3)]">
-                    <BookOpen size={48} className="text-white animate-pulse" />
+            <Card className="text-center py-12 relative overflow-visible bg-[#0F172A] border-green-500/30">
+                {/* Decorative Icon */}
+                <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-[#0F172A] p-4 rounded-full border-4 border-green-500 shadow-[0_0_30px_rgba(34,197,94,0.3)]">
+                    <Star size={48} className="text-green-400 animate-pulse" />
                 </div>
 
                 <div className="mt-8 mb-12">
-                    <span className="inline-block px-4 py-1 rounded-full bg-white/10 text-sm text-blue-200 mb-4 border border-white/20">
-                        {currentPair.type === 'synonym' ? 'Bu kelimenin EŞ ANLAMLISI nedir?' :
-                            currentPair.type === 'antonym' ? 'Bu kelimenin ZIT ANLAMLISI nedir?' :
-                                'Bu sorunun cevabı nedir?'}
+                    <span className="inline-block px-4 py-1 rounded-full bg-green-900/30 text-sm text-green-200 mb-4 border border-green-500/20">
+                        {currentQuestion.type === 'letter' ? 'Bu harf hangisidir?' :
+                            currentQuestion.type === 'surah' ? 'Bu hangi suredir?' :
+                                'Soruya cevap ver'}
                     </span>
 
                     <motion.div
-                        key={currentPair.word}
+                        key={currentQuestion.id}
                         initial={{ scale: 0.5, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
-                        className="text-4xl md:text-5xl font-bold bg-white/5 inline-block px-12 py-6 rounded-3xl border-2 border-purple-500/50 mt-4 block"
+                        className={cn(
+                            "font-bold bg-white/5 inline-block px-12 py-6 rounded-3xl border-2 border-green-500/50 mt-4 block",
+                            currentQuestion.type === 'letter' ? "text-8xl font-serif" :
+                                currentQuestion.type === 'surah' ? "text-3xl md:text-4xl leading-relaxed font-serif" :
+                                    "text-3xl md:text-5xl"
+                        )}
                     >
-                        {currentPair.word}
+                        {currentQuestion.question}
                     </motion.div>
                 </div>
 
@@ -182,7 +183,7 @@ export const TurkishGame = () => {
                     <AnimatePresence mode='popLayout'>
                         {options.map((option, idx) => (
                             <motion.button
-                                key={`${currentPair.id}-${option}`}
+                                key={`${currentQuestion.id}-${option}`}
                                 initial={{ scale: 0.8, opacity: 0 }}
                                 animate={{ scale: 1, opacity: 1 }}
                                 transition={{ delay: idx * 0.1 }}
@@ -191,11 +192,11 @@ export const TurkishGame = () => {
                                 onClick={() => handleAnswer(option)}
                                 className={cn(
                                     "p-6 text-xl font-bold rounded-xl border-2 transition-all shadow-lg",
-                                    feedback === 'correct' && option === currentPair.match
-                                        ? "bg-green-500 border-green-400 text-white shadow-green-500/50"
-                                        : feedback === 'wrong' && option !== currentPair.match
+                                    feedback === 'correct' && option === currentQuestion.answer
+                                        ? "bg-green-600 border-green-400 text-white shadow-green-500/50"
+                                        : feedback === 'wrong' && option !== currentQuestion.answer
                                             ? "opacity-50"
-                                            : "bg-[#2D1B4E] border-[#4D2B8E] text-white hover:border-purple-500 hover:bg-[#3D2B6E]"
+                                            : "bg-[#1E293B] border-[#334155] text-white hover:border-green-500 hover:bg-[#2D3F54]"
                                 )}
                                 disabled={feedback !== null}
                             >
@@ -217,11 +218,11 @@ export const TurkishGame = () => {
                             )}
                         >
                             <div>
-                                {feedback === 'correct' ? "Harika! Doğru Cevap! 📚" : `Yanlış! Doğru cevap: ${currentPair.match}`}
+                                {feedback === 'correct' ? "Maşallah! Doğru Bildin! 🌟" : `Yanlış. Doğrusu: ${currentQuestion.answer}`}
                             </div>
-                            {currentPair.explanation && (
+                            {currentQuestion.explanation && (
                                 <div className="text-lg text-white/80 mt-2 font-normal">
-                                    💡 {currentPair.explanation}
+                                    💡 {currentQuestion.explanation}
                                 </div>
                             )}
                         </motion.div>
