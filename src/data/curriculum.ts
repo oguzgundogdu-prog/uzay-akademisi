@@ -49,6 +49,24 @@ export const mathCurriculum: Subject = {
             title: 'Bölme İşlemi',
             description: 'Paylaştırmayı öğren!',
             items: []
+        },
+        {
+            id: 'time',
+            title: 'Zamanı Ölçme',
+            description: 'Saatleri ve zamanı öğrenelim!',
+            items: [
+                // Image 1: Daily Routines
+                { id: 'time1', question: 'Saat 07:30. Kahvaltı yapıyorum. Günün hangi vakti?', answer: 'Sabah', options: ['Sabah', 'Öğle', 'Akşam', 'Gece'], type: 'word-match', difficulty: 1 },
+                { id: 'time2', question: 'Saat 12:00. Öğle yemeği yiyorum. Günün hangi vakti?', answer: 'Öğle', options: ['Sabah', 'Öğle', 'Akşam', 'Gece'], type: 'word-match', difficulty: 1 },
+                { id: 'time3', question: 'Saat 19:00. Akşam yemeği yiyorum. Günün hangi vakti?', answer: 'Akşam', options: ['Sabah', 'Öğle', 'Akşam', 'Gece'], type: 'word-match', difficulty: 1 },
+                { id: 'time4', question: 'Okuldan geldim, ödevimi yapıyorum. Güneş batmak üzere.', answer: 'Öğleden Sonra', options: ['Sabah', 'Öğle', 'Öğleden Sonra', 'Gece'], type: 'word-match', difficulty: 1 },
+
+                // Image 2: Duration Comparison
+                { id: 'dur1', question: 'Hangisi daha uzun sürer?', answer: 'Tiyatro (37 dk)', options: ['Tiyatro (37 dk)', 'Fıkra (7 dk)'], type: 'word-match', difficulty: 2 },
+                { id: 'dur2', question: 'Hangisi daha uzun sürer?', answer: 'Uyku (9 saat)', options: ['Diş Fırçalama (2 dk)', 'Uyku (9 saat)'], type: 'word-match', difficulty: 2 },
+                { id: 'dur3', question: 'Hangisi daha uzun sürer?', answer: 'Yaz Tatili (3 ay)', options: ['Yaz Tatili (3 ay)', 'Yarıyıl Tatili (2 hafta)'], type: 'word-match', difficulty: 2 },
+                { id: 'dur4', question: 'Hangisi daha kısadır?', answer: 'Tenefüs (15 dk)', options: ['Ders (40 dk)', 'Tenefüs (15 dk)'], type: 'word-match', difficulty: 2 }
+            ]
         }
     ]
 };

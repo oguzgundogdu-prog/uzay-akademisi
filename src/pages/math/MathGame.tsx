@@ -1,18 +1,20 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
-import { Rocket, Star, ArrowLeft, Calculator } from 'lucide-react';
+import { Rocket, Star, ArrowLeft, Calculator, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button, Card, cn } from '../../components/ui/core';
 import { useGameStore } from '../../store/gameStore';
 import { mathCurriculum } from '../../data/curriculum';
 
 type Question = {
-    n1: number;
-    n2: number;
-    operation: '+' | '-' | 'x' | '÷';
-    answer: number;
-    options: number[];
+    text?: string; // For text based questions
+    n1?: number;
+    n2?: number;
+    operation?: '+' | '-' | 'x' | '÷';
+    answer: number | string;
+    options: (number | string)[];
+    type: 'procedural' | 'static';
 };
 
 export const MathGame = () => {
@@ -26,6 +28,24 @@ export const MathGame = () => {
     const generateQuestion = () => {
         if (!selectedTopic) return;
 
+        const topicData = mathCurriculum.topics.find(t => t.id === selectedTopic);
+
+        // Static Curriculum Items (e.g. Time)
+        if (topicData && topicData.items.length > 0) {
+            const randomItem = topicData.items[Math.floor(Math.random() * topicData.items.length)];
+            const options = [...randomItem.options].sort(() => Math.random() - 0.5);
+
+            setQuestion({
+                text: randomItem.question,
+                answer: randomItem.answer,
+                options: options,
+                type: 'static'
+            });
+            setFeedback(null);
+            return;
+        }
+
+        // Procedural Math Generation
         let n1, n2, answer;
         let operation: Question['operation'] = '+';
 
@@ -75,6 +95,7 @@ export const MathGame = () => {
             operation,
             answer,
             options: Array.from(options).sort(() => Math.random() - 0.5),
+            type: 'procedural'
         });
         setFeedback(null);
     };
@@ -85,7 +106,7 @@ export const MathGame = () => {
         }
     }, [selectedTopic]);
 
-    const handleAnswer = (option: number) => {
+    const handleAnswer = (option: number | string) => {
         if (!question) return;
 
         if (option === question.answer) {
@@ -127,7 +148,7 @@ export const MathGame = () => {
                         >
                             <div className="flex items-center gap-4 mb-4">
                                 <div className="p-3 bg-neon-blue/20 rounded-xl text-neon-blue group-hover:bg-neon-blue group-hover:text-black transition-colors">
-                                    <Calculator size={32} />
+                                    {topic.id === 'time' ? <Clock size={32} /> : <Calculator size={32} />}
                                 </div>
                                 <h3 className="text-2xl font-bold text-white">{topic.title}</h3>
                             </div>
@@ -160,38 +181,54 @@ export const MathGame = () => {
                 </div>
 
                 <div className="mt-8 mb-12">
-                    <h2 className="text-blue-200 text-lg mb-4">İşlemi Çöz, Roketi Fırlat!</h2>
-                    <div className="text-7xl font-bold font-mono flex items-center justify-center gap-6">
-                        <motion.div
-                            key={question.n1}
-                            initial={{ y: -50, opacity: 0 }}
-                            animate={{ y: 0, opacity: 1 }}
-                            className="bg-white/5 p-4 rounded-2xl"
-                        >
-                            {question.n1}
-                        </motion.div>
-                        <span className="text-neon-blue">{question.operation}</span>
-                        <motion.div
-                            key={question.n2}
-                            initial={{ y: -50, opacity: 0 }}
-                            animate={{ y: 0, opacity: 1 }}
-                            transition={{ delay: 0.1 }}
-                            className="bg-white/5 p-4 rounded-2xl"
-                        >
-                            {question.n2}
-                        </motion.div>
-                        <span className="text-gray-400">=</span>
-                        <div className="w-24 h-24 bg-white/10 rounded-2xl border-2 border-dashed border-white/20 flex items-center justify-center text-4xl text-neon-blue">
-                            ?
+                    <h2 className="text-blue-200 text-lg mb-4">
+                        {question.type === 'static' ? 'Soruyu Cevapla!' : 'İşlemi Çöz, Roketi Fırlat!'}
+                    </h2>
+
+                    {question.type === 'static' ? (
+                        <div className="min-h-[160px] flex items-center justify-center">
+                            <motion.div
+                                key={question.text}
+                                initial={{ scale: 0.9, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                className="text-2xl md:text-3xl font-bold text-white max-w-lg mx-auto leading-relaxed"
+                            >
+                                {question.text}
+                            </motion.div>
                         </div>
-                    </div>
+                    ) : (
+                        <div className="text-7xl font-bold font-mono flex items-center justify-center gap-6 min-h-[160px]">
+                            <motion.div
+                                key={question.n1}
+                                initial={{ y: -50, opacity: 0 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                className="bg-white/5 p-4 rounded-2xl"
+                            >
+                                {question.n1}
+                            </motion.div>
+                            <span className="text-neon-blue">{question.operation}</span>
+                            <motion.div
+                                key={question.n2}
+                                initial={{ y: -50, opacity: 0 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                transition={{ delay: 0.1 }}
+                                className="bg-white/5 p-4 rounded-2xl"
+                            >
+                                {question.n2}
+                            </motion.div>
+                            <span className="text-gray-400">=</span>
+                            <div className="w-24 h-24 bg-white/10 rounded-2xl border-2 border-dashed border-white/20 flex items-center justify-center text-4xl text-neon-blue">
+                                ?
+                            </div>
+                        </div>
+                    )}
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 max-w-md mx-auto">
+                <div className="grid grid-cols-2 gap-4 max-w-xl mx-auto">
                     <AnimatePresence mode='popLayout'>
-                        {question.options.map((option: number, idx: number) => (
+                        {question.options.map((option, idx) => (
                             <motion.button
-                                key={`${question.n1}-${question.n2}-${option}`}
+                                key={`${question.type}-${idx}-${option}`}
                                 initial={{ scale: 0.8, opacity: 0 }}
                                 animate={{ scale: 1, opacity: 1 }}
                                 transition={{ delay: idx * 0.1 }}
@@ -199,11 +236,13 @@ export const MathGame = () => {
                                 whileTap={{ scale: 0.95 }}
                                 onClick={() => handleAnswer(option)}
                                 className={cn(
-                                    "p-6 text-2xl font-bold rounded-xl border-2 transition-all",
+                                    "p-6 font-bold rounded-xl border-2 transition-all flex items-center justify-center",
+                                    // Adjust font size based on option length
+                                    typeof option === 'string' && option.length > 10 ? "text-lg" : "text-2xl",
                                     feedback === 'correct' && option === question.answer
                                         ? "bg-green-500/20 border-green-500 text-green-400"
                                         : feedback === 'wrong' && option !== question.answer
-                                            ? "opacity-50" // Dim wrong answers
+                                            ? "opacity-50"
                                             : "bg-white/5 border-white/10 hover:border-neon-blue hover:bg-neon-blue/10"
                                 )}
                                 disabled={feedback !== null}
