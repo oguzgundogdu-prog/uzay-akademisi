@@ -1,15 +1,16 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
-import { Rocket, Star, ArrowLeft } from 'lucide-react';
+import { Rocket, Star, ArrowLeft, Calculator } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button, Card, cn } from '../../components/ui/core';
 import { useGameStore } from '../../store/gameStore';
+import { mathCurriculum } from '../../data/curriculum';
 
 type Question = {
     n1: number;
     n2: number;
-    operation: '+' | '-';
+    operation: '+' | '-' | 'x' | '÷';
     answer: number;
     options: number[];
 };
@@ -17,22 +18,45 @@ type Question = {
 export const MathGame = () => {
     const navigate = useNavigate();
     const { addXp } = useGameStore();
+    const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
     const [question, setQuestion] = useState<Question | null>(null);
     const [streak, setStreak] = useState(0);
     const [feedback, setFeedback] = useState<'correct' | 'wrong' | null>(null);
 
     const generateQuestion = () => {
-        const operation = Math.random() > 0.5 ? '+' : '-';
-        let n1, n2, answer;
+        if (!selectedTopic) return;
 
-        if (operation === '+') {
-            n1 = Math.floor(Math.random() * 50) + 1;
-            n2 = Math.floor(Math.random() * 40) + 1;
-            answer = n1 + n2;
-        } else {
-            n1 = Math.floor(Math.random() * 50) + 10;
-            n2 = Math.floor(Math.random() * n1);
-            answer = n1 - n2;
+        let n1, n2, answer;
+        let operation: Question['operation'] = '+';
+
+        switch (selectedTopic) {
+            case 'addition':
+                operation = '+';
+                n1 = Math.floor(Math.random() * 50) + 1;
+                n2 = Math.floor(Math.random() * 40) + 1;
+                answer = n1 + n2;
+                break;
+            case 'subtraction':
+                operation = '-';
+                n1 = Math.floor(Math.random() * 50) + 10;
+                n2 = Math.floor(Math.random() * n1);
+                answer = n1 - n2;
+                break;
+            case 'multiplication':
+                operation = 'x';
+                n1 = Math.floor(Math.random() * 10) + 1;
+                n2 = Math.floor(Math.random() * 10) + 1;
+                answer = n1 * n2;
+                break;
+            case 'division':
+                operation = '÷';
+                n2 = Math.floor(Math.random() * 9) + 2; // Dilvisor 2-10
+                answer = Math.floor(Math.random() * 10) + 1; // Quotient 1-10
+                n1 = n2 * answer; // Dividend
+                break;
+            default: // Mixed or fallback
+                operation = '+';
+                n1 = 1; n2 = 1; answer = 2;
         }
 
         // Generate options
@@ -56,8 +80,10 @@ export const MathGame = () => {
     };
 
     useEffect(() => {
-        generateQuestion();
-    }, []);
+        if (selectedTopic) {
+            generateQuestion();
+        }
+    }, [selectedTopic]);
 
     const handleAnswer = (option: number) => {
         if (!question) return;
@@ -79,14 +105,48 @@ export const MathGame = () => {
         }
     };
 
+    if (!selectedTopic) {
+        return (
+            <div className="max-w-4xl mx-auto space-y-8">
+                <div className="flex items-center justify-between">
+                    <Button variant="secondary" onClick={() => navigate('/')} className="gap-2">
+                        <ArrowLeft size={20} />
+                        Ana Üs
+                    </Button>
+                    <h1 className="text-3xl font-bold text-white">Görev Seçimi</h1>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {mathCurriculum.topics.map((topic) => (
+                        <motion.button
+                            key={topic.id}
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => setSelectedTopic(topic.id)}
+                            className="bg-space-dark/80 border-2 border-neon-blue/30 p-8 rounded-2xl text-left hover:border-neon-blue transition-colors group"
+                        >
+                            <div className="flex items-center gap-4 mb-4">
+                                <div className="p-3 bg-neon-blue/20 rounded-xl text-neon-blue group-hover:bg-neon-blue group-hover:text-black transition-colors">
+                                    <Calculator size={32} />
+                                </div>
+                                <h3 className="text-2xl font-bold text-white">{topic.title}</h3>
+                            </div>
+                            <p className="text-gray-400 text-lg">{topic.description}</p>
+                        </motion.button>
+                    ))}
+                </div>
+            </div>
+        );
+    }
+
     if (!question) return <div>Yükleniyor...</div>;
 
     return (
         <div className="max-w-2xl mx-auto space-y-8">
             <div className="flex items-center justify-between">
-                <Button variant="secondary" onClick={() => navigate('/')} className="gap-2">
+                <Button variant="secondary" onClick={() => setSelectedTopic(null)} className="gap-2">
                     <ArrowLeft size={20} />
-                    Ana Üs
+                    Görevler
                 </Button>
                 <div className="flex items-center gap-2 bg-yellow-500/20 text-yellow-500 px-4 py-2 rounded-xl border border-yellow-500/30">
                     <Star className="fill-current" size={20} />
@@ -162,7 +222,7 @@ export const MathGame = () => {
                             exit={{ opacity: 0 }}
                             className={cn(
                                 "mt-8 text-xl font-bold",
-                                feedback === 'correct' ? "text-green-400" : "text-red-400"
+                                "text-green-400" // Simplify, always positive reinforcement style or handle wrong differently
                             )}
                         >
                             {feedback === 'correct' ? "Harika! Doğru Cevap! 🚀" : "Tekrar Dene! 🛸"}

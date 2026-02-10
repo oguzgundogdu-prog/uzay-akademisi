@@ -7,24 +7,20 @@ import { Button, Card, cn } from '../../components/ui/core';
 import { useGameStore } from '../../store/gameStore';
 
 type WordPair = {
-    id: number;
+    id: string;
     word: string;
     match: string;
     type: 'synonym' | 'antonym'; // Eş Anlam | Zıt Anlam
 };
 
-const wordData: WordPair[] = [
-    { id: 1, word: 'Siyah', match: 'Kara', type: 'synonym' },
-    { id: 2, word: 'Beyaz', match: 'Ak', type: 'synonym' },
-    { id: 3, word: 'Kırmızı', match: 'Al', type: 'synonym' },
-    { id: 4, word: 'Yaşlı', match: 'İhtiyar', type: 'synonym' },
-    { id: 5, word: 'Uzun', match: 'Kısa', type: 'antonym' },
-    { id: 6, word: 'Büyük', match: 'Küçük', type: 'antonym' },
-    { id: 7, word: 'Ağır', match: 'Hafif', type: 'antonym' },
-    { id: 8, word: 'Güzel', match: 'Çirkin', type: 'antonym' },
-    { id: 9, word: 'Okul', match: 'Mektep', type: 'synonym' },
-    { id: 10, word: 'Öğrenci', match: 'Talebe', type: 'synonym' },
-];
+import { turkishCurriculum } from '../../data/curriculum';
+
+const wordData = turkishCurriculum.topics.flatMap(t => t.items.map(i => ({
+    id: i.id,
+    word: i.question,
+    match: i.answer as string,
+    type: t.id === 'synonyms' ? 'synonym' : 'antonym' as 'synonym' | 'antonym'
+})));
 
 export const TurkishGame = () => {
     const navigate = useNavigate();
