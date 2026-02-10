@@ -15,6 +15,7 @@ type Question = {
     answer: number | string;
     options: (number | string)[];
     type: 'procedural' | 'static';
+    explanation?: string;
 };
 
 export const MathGame = () => {
@@ -39,7 +40,8 @@ export const MathGame = () => {
                 text: randomItem.question,
                 answer: randomItem.answer,
                 options: options,
-                type: 'static'
+                type: 'static',
+                explanation: randomItem.explanation
             });
             setFeedback(null);
             return;
@@ -119,7 +121,7 @@ export const MathGame = () => {
                 origin: { y: 0.6 },
                 colors: ['#00F0FF', '#BD00FF', '#FFD700']
             });
-            setTimeout(generateQuestion, 1500);
+            setTimeout(generateQuestion, 2500); // 2.5s to read explanation
         } else {
             setFeedback('wrong');
             setStreak(0);
@@ -263,11 +265,18 @@ export const MathGame = () => {
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0 }}
                             className={cn(
-                                "mt-8 text-xl font-bold",
-                                "text-green-400" // Simplify, always positive reinforcement style or handle wrong differently
+                                "mt-8 text-xl font-bold px-4",
+                                feedback === 'correct' ? "text-green-400" : "text-red-400"
                             )}
                         >
-                            {feedback === 'correct' ? "Harika! Doğru Cevap! 🚀" : "Tekrar Dene! 🛸"}
+                            <div>
+                                {feedback === 'correct' ? "Harika! Doğru Cevap! 🚀" : "Tekrar Dene! 🛸"}
+                            </div>
+                            {question.explanation && (
+                                <div className="text-lg text-white/80 mt-2 font-normal">
+                                    💡 {question.explanation}
+                                </div>
+                            )}
                         </motion.div>
                     )}
                 </AnimatePresence>

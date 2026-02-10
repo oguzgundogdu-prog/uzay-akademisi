@@ -3,9 +3,15 @@ import { motion } from 'framer-motion';
 import { Brain, Star, Clock, Trophy } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Card, Button } from '../components/ui/core';
+import { useGameStore } from '../store/gameStore';
 
 export const Dashboard = () => {
     const navigate = useNavigate();
+    const { xp, level, badges } = useGameStore();
+
+    const nextLevelXp = level * 1000;
+    const progressToNext = Math.min(100, Math.floor((xp % 1000) / 10));
+
     return (
         <div className="space-y-8">
             <section className="text-center space-y-4">
@@ -22,65 +28,65 @@ export const Dashboard = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <StatCard
                     icon={<Star className="text-yellow-400" />}
-                    title="Toplam Puan"
-                    value="1,250"
-                    desc="Sonraki rütbe: 2,000"
+                    title="Toplam Puan (XP)"
+                    value={xp.toLocaleString()}
+                    desc={`Sonraki rütbe: ${nextLevelXp} XP`}
                 />
                 <StatCard
                     icon={<Trophy className="text-purple-400" />}
                     title="Rozetler"
-                    value="12"
+                    value={badges.length}
                     desc="Kazanılan ödüller"
                 />
                 <StatCard
                     icon={<Brain className="text-neon-blue" />}
-                    title="Zeka Puanı"
-                    value="Level 5"
-                    desc="%85 Tamamlandı"
+                    title="Rütbe"
+                    value={`Seviye ${level}`}
+                    desc={`%${progressToNext} Tamamlandı`}
                 />
                 <StatCard
                     icon={<Clock className="text-green-400" />}
                     title="Çalışma Süresi"
-                    value="45 dk"
+                    value="0 dk"
                     desc="Bugün"
                 />
             </div>
 
             <h2 className="text-2xl font-bold text-white mt-8 mb-4 flex items-center gap-2">
                 <span className="w-2 h-8 bg-neon-blue rounded-full"></span>
-                Sıradaki Görevler
+                Görev Konsolu
             </h2>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <MissionCard
-                    title="Rakamları Topla"
+                    title="Sayılarla Oyna"
                     category="Matematik"
-                    difficulty="Kolay"
-                    xp="+50 XP"
+                    difficulty="Karışık"
+                    xp="10-50 XP"
                     color="bg-blue-500/20 border-blue-500/30"
                     onClick={() => navigate('/math')}
                 />
                 <MissionCard
-                    title="Eş/Zıt Anlamlılar"
+                    title="Kelime Avcısı"
                     category="Türkçe"
-                    difficulty="Orta"
-                    xp="+75 XP"
+                    difficulty="Karışık"
+                    xp="15-60 XP"
                     color="bg-purple-500/20 border-purple-500/30"
                     onClick={() => navigate('/turkish')}
                 />
                 <MissionCard
-                    title="İyi İnsan Ol"
+                    title="Erdemli İnsan"
                     category="Yaşam"
                     difficulty="Kolay"
-                    xp="+50 XP"
+                    xp="20-100 XP"
                     color="bg-pink-500/20 border-pink-500/30"
                     onClick={() => navigate('/life')}
                 />
                 <MissionCard
-                    title="Gezegenleri Tanı"
+                    title="Gökbilimci Rozeti"
                     category="Uzay Bilimi"
-                    difficulty="Kolay"
-                    xp="+100 XP"
+                    difficulty="Bilgi"
+                    xp="15-50 XP"
                     color="bg-cyan-500/20 border-cyan-500/30"
                     onClick={() => navigate('/science')}
                 />

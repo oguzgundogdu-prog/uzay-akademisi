@@ -10,16 +10,20 @@ type WordPair = {
     id: string;
     word: string;
     match: string;
-    type: 'synonym' | 'antonym'; // Eş Anlam | Zıt Anlam
+    options: string[];
+    type: 'synonym' | 'antonym';
+    explanation?: string;
 };
 
 import { turkishCurriculum } from '../../data/curriculum';
 
-const wordData = turkishCurriculum.topics.flatMap(t => t.items.map(i => ({
+const wordData: WordPair[] = turkishCurriculum.topics.flatMap(t => t.items.map(i => ({
     id: i.id,
     word: i.question,
     match: i.answer as string,
-    type: t.id === 'synonyms' ? 'synonym' : 'antonym' as 'synonym' | 'antonym'
+    options: i.options as string[],
+    type: t.id === 'synonyms' ? 'synonym' : 'antonym' as 'synonym' | 'antonym',
+    explanation: i.explanation
 })));
 
 export const TurkishGame = () => {
@@ -32,20 +36,8 @@ export const TurkishGame = () => {
 
     const generateQuestion = () => {
         const randomPair = wordData[Math.floor(Math.random() * wordData.length)];
-
-        // Generate distractors
-        const distractors = new Set<string>();
-        distractors.add(randomPair.match);
-
-        while (distractors.size < 4) {
-            const randomDistractor = wordData[Math.floor(Math.random() * wordData.length)].match;
-            if (randomDistractor !== randomPair.match) {
-                distractors.add(randomDistractor);
-            }
-        }
-
         setCurrentPair(randomPair);
-        setOptions(Array.from(distractors).sort(() => Math.random() - 0.5));
+        setOptions([...randomPair.options].sort(() => Math.random() - 0.5));
         setFeedback(null);
     };
 
@@ -66,7 +58,7 @@ export const TurkishGame = () => {
                 origin: { y: 0.6 },
                 colors: ['#BD00FF', '#FFD700', '#F472B6']
             });
-            setTimeout(generateQuestion, 1500);
+            setTimeout(generateQuestion, 2500); // Increased timeout to read explanation
         } else {
             setFeedback('wrong');
             setStreak(0);
@@ -95,15 +87,14 @@ export const TurkishGame = () => {
 
                 <div className="mt-8 mb-12">
                     <span className="inline-block px-4 py-1 rounded-full bg-white/10 text-sm text-blue-200 mb-4 border border-white/20">
-                        {currentPair.type === 'synonym' ? 'EŞ ANLAM' : 'ZIT ANLAM'}
+                        {currentPair.type === 'synonym' ? 'Bu kelimenin EŞ ANLAMLISI nedir?' : 'Bu kelimenin ZIT ANLAMLISI nedir?'}
                     </span>
-                    <h2 className="text-blue-200 text-lg mb-4">Bu kelimenin eşi hangisi?</h2>
 
                     <motion.div
                         key={currentPair.word}
                         initial={{ scale: 0.5, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
-                        className="text-6xl font-bold bg-white/5 inline-block px-12 py-6 rounded-3xl border-2 border-purple-500/50"
+                        className="text-6xl font-bold bg-white/5 inline-block px-12 py-6 rounded-3xl border-2 border-purple-500/50 mt-4 block"
                     >
                         {currentPair.word}
                     </motion.div>
@@ -143,11 +134,18 @@ export const TurkishGame = () => {
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0 }}
                             className={cn(
-                                "mt-8 text-xl font-bold",
+                                "mt-8 text-xl font-bold px-4",
                                 feedback === 'correct' ? "text-green-400" : "text-red-400"
                             )}
                         >
-                            {feedback === 'correct' ? "Harika! Kelime Hazinen Gelişiyor! 📚" : "Tekrar Dene! 🌱"}
+                            <div>
+                                {feedback === 'correct' ? "Harika! Doğru Cevap! 📚" : `Yanlış! Doğru cevap: ${currentPair.match}`}
+                            </div>
+                            {currentPair.explanation && (
+                                <div className="text-lg text-white/80 mt-2 font-normal">
+                                    💡 {currentPair.explanation}
+                                </div>
+                            )}
                         </motion.div>
                     )}
                 </AnimatePresence>

@@ -11,6 +11,7 @@ type Question = {
     text: string;
     answer: string | number;
     options: (string | number)[];
+    explanation?: string;
 };
 
 export const ScienceGame = () => {
@@ -33,7 +34,8 @@ export const ScienceGame = () => {
             setQuestion({
                 text: randomItem.question,
                 answer: randomItem.answer,
-                options: options
+                options: options,
+                explanation: randomItem.explanation
             });
             setFeedback(null);
         }
@@ -58,7 +60,7 @@ export const ScienceGame = () => {
                 origin: { y: 0.6 },
                 colors: ['#00F0FF', '#BD00FF', '#FFD700']
             });
-            setTimeout(generateQuestion, 1500);
+            setTimeout(generateQuestion, 2500); // Time to read explanation
         } else {
             setFeedback('wrong');
             setStreak(0);
@@ -169,11 +171,18 @@ export const ScienceGame = () => {
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0 }}
                             className={cn(
-                                "mt-8 text-xl font-bold",
+                                "mt-8 text-xl font-bold px-4",
                                 feedback === 'correct' ? "text-green-400" : "text-red-400"
                             )}
                         >
-                            {feedback === 'correct' ? "Harika! Doğru Bildin! 🌍" : "Tekrar Dene! ☄️"}
+                            <div>
+                                {feedback === 'correct' ? "Harika! Doğru Bildin! 🌍" : "Tekrar Dene! ☄️"}
+                            </div>
+                            {question.explanation && (
+                                <div className="text-lg text-white/80 mt-2 font-normal">
+                                    💡 {question.explanation}
+                                </div>
+                            )}
                         </motion.div>
                     )}
                 </AnimatePresence>
