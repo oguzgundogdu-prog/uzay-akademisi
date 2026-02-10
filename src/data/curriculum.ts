@@ -1,4 +1,4 @@
-export type QuestionType = 'math' | 'word-match' | 'fill-blank';
+export type QuestionType = 'math' | 'word-match' | 'fill-blank' | 'reading' | 'visual';
 
 export interface CurriculumItem {
     id: string;
@@ -8,6 +8,7 @@ export interface CurriculumItem {
     type: QuestionType;
     difficulty: 1 | 2 | 3;
     explanation?: string;
+    image?: string; // Optional image URL for visual questions
 }
 
 export interface Topic {
@@ -142,6 +143,81 @@ export const turkishCurriculum: Subject = {
                 { id: 't8', question: 'Gel', answer: 'Git', options: ['Git', 'Koş', 'Dur', 'Bak'], type: 'word-match', difficulty: 1, explanation: 'Gelmek yaklaşmak, gitmek uzaklaşmaktır.' },
                 { id: 't9', question: 'Erken', answer: 'Geç', options: ['Geç', 'Hızlı', 'Yavaş', 'Zaman'], type: 'word-match', difficulty: 1, explanation: 'Okula erken gitmelisin, geç kalma.' },
                 { id: 't10', question: 'Taze', answer: 'Bayat', options: ['Bayat', 'Yeni', 'Sıcak', 'Soğuk'], type: 'word-match', difficulty: 1, explanation: 'Ekmek fırından yeni çıkınca tazedir, bekleyince bayatlar.' }
+            ]
+        }
+    ]
+};
+
+export const socialCurriculum: Subject = {
+    id: 'social',
+    title: 'Tarih ve Kültür',
+    topics: [
+        {
+            id: 'scientists',
+            title: 'Müslüman Bilim Adamları',
+            description: 'Tarihimize yön veren büyük isimleri tanı!',
+            items: [
+                {
+                    id: 'sci-ali',
+                    question: 'Ay\'ın haritasını çıkaran ve Fatih Sultan Mehmet zamanında İstanbul\'a gelen büyük gökbilimci kimdir?',
+                    answer: 'Ali Kuşçu',
+                    options: ['Ali Kuşçu', 'Piri Reis', 'Mimar Sinan', 'İbn-i Sina'],
+                    type: 'reading',
+                    difficulty: 2,
+                    explanation: 'Ali Kuşçu, Ayasofya medresesinde müderrislik yapmış büyük bir matematikçi ve astronomdur.'
+                },
+                {
+                    id: 'sci-piri',
+                    question: 'Dünya haritasını çizen ünlü Türk denizcisi kimdir?',
+                    answer: 'Piri Reis',
+                    options: ['Barbaros Hayrettin', 'Piri Reis', 'Seydi Ali', 'Oruç Reis'],
+                    type: 'reading',
+                    difficulty: 2,
+                    explanation: 'Piri Reis, Kitab-ı Bahriye adlı eseri ve çizdiği dünya haritası ile tanınır.'
+                },
+                {
+                    id: 'sci-sinan',
+                    question: 'Süleymaniye ve Selimiye camilerini yapan, "Koca Sinan" lakaplı mimarımız kimdir?',
+                    answer: 'Mimar Sinan',
+                    options: ['Mimar Sinan', 'Mimar Kemaleddin', 'Sedefkar Mehmet', 'Balyan Kardeşler'],
+                    type: 'reading',
+                    difficulty: 1,
+                    explanation: 'Mimar Sinan, Osmanlı İmparatorluğu\'nun baş mimarıdır ve yüzlerce eseri vardır.'
+                },
+                {
+                    id: 'sci-ibni',
+                    question: '"Tıbbın Babası" olarak bilinen ve yazdığı tıp kitapları Avrupa\'da yüzyıllarca okutulan bilim adamı kimdir?',
+                    answer: 'İbn-i Sina',
+                    options: ['Farabi', 'İbn-i Sina', 'Biruni', 'Harezmi'],
+                    type: 'reading',
+                    difficulty: 2,
+                    explanation: 'İbn-i Sina (Avicenna), El-Kanun fi\'t-Tıb kitabının yazarıdır.'
+                }
+            ]
+        },
+        {
+            id: 'culture',
+            title: 'Kültürümüz',
+            description: 'Geleneklerimiz ve değerlerimiz.',
+            items: [
+                {
+                    id: 'cult-golge',
+                    question: 'Perde arkasında oynatılan, biri bilgili diğeri halktan iki karakterin atışmasına dayanan gölge oyunumuz nedir?',
+                    answer: 'Hacivat ve Karagöz',
+                    options: ['Keloğlan', 'Nasreddin Hoca', 'Hacivat ve Karagöz', 'Meddah'],
+                    type: 'reading',
+                    difficulty: 1,
+                    explanation: 'Hacivat ve Karagöz, geleneksel Türk gölge oyununun en önemli karakterleridir.'
+                },
+                {
+                    id: 'cult-sadaka',
+                    question: 'Osmanlı\'da zenginlerin para bıraktığı, ihtiyacı olanın ise sadece ihtiyacı kadarını aldığı taşın adı nedir?',
+                    answer: 'Sadaka Taşı',
+                    options: ['Mola Taşı', 'Sadaka Taşı', 'Nişan Taşı', 'Musalla Taşı'],
+                    type: 'reading',
+                    difficulty: 2,
+                    explanation: 'Sadaka taşları, Osmanlı\'da yardımlaşmanın ne kadar zarif yapıldığının göstergesidir.'
+                }
             ]
         }
     ]

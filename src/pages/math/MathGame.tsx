@@ -29,7 +29,15 @@ export const MathGame = () => {
     const generateQuestion = () => {
         if (!selectedTopic) return;
 
-        const topicData = mathCurriculum.topics.find(t => t.id === selectedTopic);
+        let effectiveTopicId = selectedTopic;
+
+        // Mixed Mode Logic: Randomly select a topic
+        if (selectedTopic === 'mixed') {
+            const allTopicIds = mathCurriculum.topics.map(t => t.id);
+            effectiveTopicId = allTopicIds[Math.floor(Math.random() * allTopicIds.length)];
+        }
+
+        const topicData = mathCurriculum.topics.find(t => t.id === effectiveTopicId);
 
         // Static Curriculum Items (e.g. Time, Geometry, Patterns)
         if (topicData && topicData.items.length > 0) {
@@ -51,7 +59,7 @@ export const MathGame = () => {
         let n1, n2, answer;
         let operation: Question['operation'] = '+';
 
-        switch (selectedTopic) {
+        switch (effectiveTopicId) {
             case 'addition':
                 operation = '+';
                 n1 = Math.floor(Math.random() * 50) + 1;
@@ -140,6 +148,21 @@ export const MathGame = () => {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => setSelectedTopic('mixed')}
+                        className="col-span-1 md:col-span-2 bg-gradient-to-r from-pink-500/20 to-purple-500/20 border-2 border-pink-500/50 p-8 rounded-2xl text-left hover:border-pink-500 transition-colors group"
+                    >
+                        <div className="flex items-center gap-4 mb-4">
+                            <div className="p-3 bg-pink-500/20 rounded-xl text-pink-500 group-hover:bg-pink-500 group-hover:text-white transition-colors">
+                                <Star size={32} />
+                            </div>
+                            <h3 className="text-2xl font-bold text-white">Karışık Sınav Modu</h3>
+                        </div>
+                        <p className="text-gray-400 text-lg">Hepsinden biraz! Kendini dene.</p>
+                    </motion.button>
+
                     {mathCurriculum.topics.map((topic) => (
                         <motion.button
                             key={topic.id}

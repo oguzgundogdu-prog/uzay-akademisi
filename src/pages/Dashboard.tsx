@@ -90,6 +90,14 @@ export const Dashboard = () => {
                     color="bg-cyan-500/20 border-cyan-500/30"
                     onClick={() => navigate('/science')}
                 />
+                <MissionCard
+                    title="Tarih ve Kültür"
+                    category="Sosyal Bilgiler"
+                    difficulty="Okuma"
+                    xp="20-60 XP"
+                    color="bg-amber-500/20 border-amber-500/30"
+                    onClick={() => navigate('/social')}
+                />
             </div>
         </div>
     );
