@@ -12,6 +12,7 @@ export default {
                     deep: '#1A1B2E',
                     panel: 'rgba(255, 255, 255, 0.05)',
                     border: 'rgba(255, 255, 255, 0.1)',
+                    light: '#2A2B45',
                 },
                 neon: {
                     cyan: '#00F0FF',

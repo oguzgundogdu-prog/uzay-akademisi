@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
-import { ArrowLeft, Hourglass, Scroll, Landmark, History, Trophy } from 'lucide-react';
+import { ArrowLeft, Hourglass, Scroll, Landmark, Trophy } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { cn } from '../../components/ui/core';
 import { NeonButton, GlassCard } from '../../components/ui';
