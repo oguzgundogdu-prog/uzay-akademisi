@@ -213,44 +213,9 @@ export const religiousCurriculum: Subject = {
     title: 'Kuran ve Değerler',
     topics: [
         {
-            id: 'elif-ba',
-            title: 'Elif-Ba Cüzü',
-            description: 'Kuran harflerini tanıyalım',
-            items: [
-                { id: 'eb-1', question: 'ا', answer: 'Elif', options: ['Elif', 'Be', 'Te', 'Se'], type: 'letter' },
-                { id: 'eb-2', question: 'ب', answer: 'Be', options: ['Be', 'Te', 'Se', 'Cim'], type: 'letter' },
-                { id: 'eb-3', question: 'ت', answer: 'Te', options: ['Te', 'Be', 'Se', 'Ha'], type: 'letter' },
-                { id: 'eb-4', question: 'ث', answer: 'Se', options: ['Se', 'Cim', 'Ha', 'Hı'], type: 'letter' },
-                { id: 'eb-5', question: 'ج', answer: 'Cim', options: ['Cim', 'Ha', 'Hı', 'Dal'], type: 'letter' },
-                { id: 'eb-6', question: 'ح', answer: 'Ha', options: ['Ha', 'Cim', 'Hı', 'Zal'], type: 'letter' },
-                { id: 'eb-7', question: 'خ', answer: 'Hı', options: ['Hı', 'Ha', 'Cim', 'Ra'], type: 'letter' },
-                { id: 'eb-8', question: 'د', answer: 'Dal', options: ['Dal', 'Zal', 'Ra', 'Ze'], type: 'letter' },
-                { id: 'eb-9', question: 'ذ', answer: 'Zal', options: ['Zal', 'Dal', 'Ra', 'Ze'], type: 'letter' },
-                { id: 'eb-10', question: 'ر', answer: 'Ra', options: ['Ra', 'Ze', 'Sin', 'Şın'], type: 'letter' },
-                { id: 'eb-11', question: 'ز', answer: 'Ze', options: ['Ze', 'Ra', 'Sin', 'Şın'], type: 'letter' },
-                { id: 'eb-12', question: 'س', answer: 'Sin', options: ['Sin', 'Şın', 'Sad', 'Dad'], type: 'letter' },
-                { id: 'eb-13', question: 'ش', answer: 'Şın', options: ['Şın', 'Sin', 'Sad', 'Dad'], type: 'letter' },
-                { id: 'eb-14', question: 'ص', answer: 'Sad', options: ['Sad', 'Dad', 'Tı', 'Zı'], type: 'letter' },
-                { id: 'eb-15', question: 'ض', answer: 'Dad', options: ['Dad', 'Sad', 'Tı', 'Zı'], type: 'letter' },
-                { id: 'eb-16', question: 'ط', answer: 'Tı', options: ['Tı', 'Zı', 'Ayn', 'Gayn'], type: 'letter' },
-                { id: 'eb-17', question: 'ظ', answer: 'Zı', options: ['Zı', 'Tı', 'Ayn', 'Gayn'], type: 'letter' },
-                { id: 'eb-18', question: 'ع', answer: 'Ayn', options: ['Ayn', 'Gayn', 'Fe', 'Kaf'], type: 'letter' },
-                { id: 'eb-19', question: 'غ', answer: 'Gayn', options: ['Gayn', 'Ayn', 'Fe', 'Kaf'], type: 'letter' },
-                { id: 'eb-20', question: 'ف', answer: 'Fe', options: ['Fe', 'Kaf', 'Kef', 'Lam'], type: 'letter' },
-                { id: 'eb-21', question: 'ق', answer: 'Kaf', options: ['Kaf', 'Fe', 'Kef', 'Lam'], type: 'letter' },
-                { id: 'eb-22', question: 'ك', answer: 'Kef', options: ['Kef', 'Lam', 'Mim', 'Nun'], type: 'letter' },
-                { id: 'eb-23', question: 'ل', answer: 'Lam', options: ['Lam', 'Kef', 'Mim', 'Nun'], type: 'letter' },
-                { id: 'eb-24', question: 'م', answer: 'Mim', options: ['Mim', 'Nun', 'Vav', 'He'], type: 'letter' },
-                { id: 'eb-25', question: 'ن', answer: 'Nun', options: ['Nun', 'Mim', 'Vav', 'He'], type: 'letter' },
-                { id: 'eb-26', question: 'و', answer: 'Vav', options: ['Vav', 'He', 'Lam', 'Ye'], type: 'letter' },
-                { id: 'eb-27', question: 'ه', answer: 'He', options: ['He', 'Vav', 'Lam', 'Ye'], type: 'letter' },
-                { id: 'eb-28', question: 'ي', answer: 'Ye', options: ['Ye', 'He', 'Vav', 'Lam'], type: 'letter' }
-            ]
-        },
-        {
             id: 'surahs',
             title: 'Namaz Sureleri',
-            description: 'Son 10 Sureyi Öğren',
+            description: 'Kısa Sureleri Öğren',
             items: [
                 {
                     id: 'fil',
@@ -330,6 +295,69 @@ export const religiousCurriculum: Subject = {
                     answer: 'Nas Suresi',
                     options: ['Nas Suresi', 'Felak Suresi', 'İhlas Suresi', 'Kevser Suresi'],
                     explanation: 'İnsanların ve cinlerin vesvesesinden Allah\'a sığınmayı öğretir.',
+                    type: 'surah'
+                }
+            ]
+        },
+        {
+            id: 'prayer-duas',
+            title: 'Namaz Duaları',
+            description: 'Namazda okunan duaları öğren',
+            items: [
+                {
+                    id: 'subhaneke',
+                    question: 'Sübhânekellâhümme ve bi hamdik...',
+                    answer: 'Sübhaneke',
+                    options: ['Sübhaneke', 'Et-Tahiyyatü', 'Kunut Duaları', 'Fatiha'],
+                    explanation: 'Namazın ilk rekatında iftitah tekbirinden sonra okunur.',
+                    type: 'surah'
+                },
+                {
+                    id: 'tahiyyat',
+                    question: 'Et-tahıyyâtü lillâhi ve\'s-salevâtü ve\'t-tayyibât...',
+                    answer: 'Et-Tahiyyatü',
+                    options: ['Et-Tahiyyatü', 'Allahümme Salli', 'Rabbena Atina', 'Sübhaneke'],
+                    explanation: 'Namazdaki oturuşlarda (kade) okunur.',
+                    type: 'surah'
+                },
+                {
+                    id: 'salli',
+                    question: 'Allâhümme salli alâ Muhammedin ve alâ âli Muhammed...',
+                    answer: 'Allahümme Salli',
+                    options: ['Allahümme Salli', 'Allahümme Barik', 'Rabbena', 'Et-Tahiyyatü'],
+                    explanation: 'Hz. Peygambere salat ve selam getirir.',
+                    type: 'surah'
+                },
+                {
+                    id: 'barik',
+                    question: 'Allâhümme bârik alâ Muhammedin ve alâ âli Muhammed...',
+                    answer: 'Allahümme Barik',
+                    options: ['Allahümme Barik', 'Allahümme Salli', 'Kunut', 'Maun'],
+                    explanation: 'Hz. Peygambere ve ailesine bereket diler.',
+                    type: 'surah'
+                },
+                {
+                    id: 'rabbena',
+                    question: 'Rabbenâ âtinâ fi\'d-dünyâ haseneten...',
+                    answer: 'Rabbena Atina',
+                    options: ['Rabbena Atina', 'Rabbenağfirli', 'Kunut', 'Fatiha'],
+                    explanation: 'Dünya ve ahiret iyiliği istenir.',
+                    type: 'surah'
+                },
+                {
+                    id: 'kunut1',
+                    question: 'Allâhümme innâ nesteînüke ve nestağfirüke...',
+                    answer: 'Kunut Duası 1',
+                    options: ['Kunut Duası 1', 'Kunut Duası 2', 'Amentü', 'Sübhaneke'],
+                    explanation: 'Vitir namazında okunur.',
+                    type: 'surah'
+                },
+                {
+                    id: 'amentu',
+                    question: 'Âmentü billâhi ve melâiketihî ve kütübihî...',
+                    answer: 'Amentü',
+                    options: ['Amentü', 'Fatiha', 'Ayetel Kürsi', 'Sübhaneke'],
+                    explanation: 'İmanın şartlarını (esaslarını) ifade eder.',
                     type: 'surah'
                 }
             ]

@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Orbitron:wght@400;500;700;900&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,18 +6,72 @@
 
 @layer base {
   body {
-    @apply bg-space-dark text-white font-sans antialiased;
+    @apply bg-space-void text-white font-sans antialiased overflow-x-hidden;
+    background-image:
+      radial-gradient(circle at 50% 0%, rgba(0, 240, 255, 0.15), transparent 40%),
+      radial-gradient(circle at 0% 50%, rgba(189, 0, 255, 0.1), transparent 40%),
+      radial-gradient(circle at 100% 50%, rgba(255, 0, 153, 0.1), transparent 40%);
+    background-attachment: fixed;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-display tracking-wider;
   }
 }
 
-.glass-panel {
-  @apply bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl shadow-xl;
+@layer components {
+  .glass-panel {
+    @apply bg-space-panel backdrop-blur-xl border border-space-border rounded-2xl shadow-xl;
+  }
+
+  .glass-card {
+    @apply bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-md border border-white/10 rounded-xl shadow-lg hover:border-white/20 transition-all duration-300;
+  }
+
+  .neon-text {
+    text-shadow: 0 0 10px currentColor;
+  }
+
+  .neon-border {
+    box-shadow: 0 0 10px currentColor, inset 0 0 10px currentColor;
+  }
+
+  .hud-panel {
+    @apply relative border border-neon-cyan/30 bg-black/40 backdrop-blur-md;
+    clip-path: polygon(20px 0, 100% 0,
+        100% calc(100% - 20px), calc(100% - 20px) 100%,
+        0 100%, 0 20px);
+  }
+
+  .hud-panel::before {
+    content: '';
+    @apply absolute top-0 left-0 w-5 h-[1px] bg-neon-cyan;
+  }
+
+  .hud-panel::after {
+    content: '';
+    @apply absolute bottom-0 right-0 w-5 h-[1px] bg-neon-cyan;
+  }
 }
 
-.btn-primary {
-  @apply bg-gradient-to-r from-neon-blue to-blue-600 text-white font-bold py-3 px-6 rounded-xl transform transition-all active:scale-95 hover:shadow-lg hover:shadow-neon-blue/20;
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
 }
 
-.btn-secondary {
-  @apply bg-white/10 border border-white/20 text-white font-bold py-3 px-6 rounded-xl transform transition-all active:scale-95 hover:bg-white/20;
+::-webkit-scrollbar-track {
+  @apply bg-space-void;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-space-light rounded-full border border-space-border;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-neon-blue/50;
 }

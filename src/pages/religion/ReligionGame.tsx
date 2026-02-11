@@ -1,12 +1,12 @@
-
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
-import { ArrowLeft, Star, Heart } from 'lucide-react'; // Changed icons for variety
+import { ArrowLeft, Moon, BookOpen, Star, Heart, Sparkles, Trophy } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Button, Card, cn } from '../../components/ui/core';
+import { cn } from '../../components/ui/core';
+import { NeonButton, GlassCard } from '../../components/ui';
 import { useGameStore } from '../../store/gameStore';
-import { religiousCurriculum } from '../../data/curriculum'; // Import the new curriculum
+import { religiousCurriculum } from '../../data/curriculum';
 import { GameOverlay } from '../../components/game/GameOverlay';
 
 type QuestionItem = {
@@ -24,11 +24,12 @@ const allRelData: QuestionItem[] = religiousCurriculum.topics.flatMap(t => t.ite
 export const ReligionGame = () => {
     const navigate = useNavigate();
     const location = useLocation();
-    const { addXp, useHeart, hearts, addGem, unlockNode } = useGameStore();
+    const { addXp, markQuestionSeen, useHeart, hearts, addGem, unlockNode } = useGameStore();
 
-    const [selectedTopic] = useState<string | null>(location.state?.topic || null);
+    const [selectedTopic, setSelectedTopic] = useState<string | null>(location.state?.topic || null);
     const nodeId = location.state?.nodeId;
     const isCampaign = !!nodeId;
+    const isPractice = location.state?.mode === 'practice';
 
     const [currentQuestion, setCurrentQuestion] = useState<QuestionItem | null>(null);
     const [options, setOptions] = useState<(string | number)[]>([]);
@@ -46,10 +47,8 @@ export const ReligionGame = () => {
 
         let available = allRelData;
         if (selectedTopic) {
-            // Simple filtering based on topic ID from mapData matching curriculum topic IDs
-            // We might need to ensure mapData topicIds matches curriculum 'id's or we filter by checking item IDs prefix
-            if (selectedTopic === 'elif-ba') available = religiousCurriculum.topics.find(t => t.id === 'elif-ba')?.items || [];
-            else if (selectedTopic === 'prophets') available = religiousCurriculum.topics.find(t => t.id === 'prophets')?.items || [];
+            const topic = religiousCurriculum.topics.find(t => t.id === selectedTopic);
+            if (topic) available = topic.items;
         }
 
         if (available.length === 0) available = allRelData;
@@ -70,13 +69,20 @@ export const ReligionGame = () => {
             particleCount: 200,
             spread: 70,
             origin: { y: 0.6 },
-            colors: ['#4CAF50', '#FFC107', '#FFFFFF'] // Green/Gold/White
+            colors: ['#4CAF50', '#FFD700', '#FFFFFF']
         });
     };
 
     useEffect(() => {
+        if (selectedTopic) {
+            generateQuestion();
+        }
+    }, [selectedTopic]);
+
+    // Manual Advance for Practice Mode
+    const handleNextQuestion = () => {
         generateQuestion();
-    }, []);
+    };
 
     const handleAnswer = (selectedOption: string | number) => {
         if (!currentQuestion || feedback) return;
@@ -85,6 +91,7 @@ export const ReligionGame = () => {
             setFeedback('correct');
             setStreak(s => s + 1);
             addXp(20 + (streak * 5));
+            markQuestionSeen(currentQuestion.id);
 
             if (isCampaign) {
                 setQuestionsLeft(prev => prev - 1);
@@ -94,21 +101,26 @@ export const ReligionGame = () => {
                 particleCount: 100,
                 spread: 70,
                 origin: { y: 0.6 },
-                colors: ['#4CAF50']
+                colors: ['#4CAF50', '#FFD700', '#FFFFFF']
             });
 
-            if (isCampaign && questionsLeft <= 1) {
-                setTimeout(() => handleWin(), 1500);
-            } else {
-                setTimeout(generateQuestion, 2500);
+            // Auto-advance only if NOT practice
+            if (!isPractice) {
+                if (isCampaign && questionsLeft <= 1) {
+                    setTimeout(() => handleWin(), 1500);
+                } else {
+                    setTimeout(generateQuestion, 2500);
+                }
             }
         } else {
             setFeedback('wrong');
             setStreak(0);
 
-            const hasHearts = useHeart();
-            if (!hasHearts) {
-                setGameState('lose');
+            if (!isPractice) {
+                const hasHearts = useHeart();
+                if (!hasHearts) {
+                    setGameState('lose');
+                }
             }
         }
     };
@@ -124,62 +136,108 @@ export const ReligionGame = () => {
         );
     }
 
-    if (!currentQuestion) return <div className="text-center text-white mt-20">Yükleniyor...</div>;
+    if (!selectedTopic) {
+        return (
+            <div className="max-w-6xl mx-auto space-y-8 pb-20">
+                <div className="flex items-center justify-between">
+                    <NeonButton variant="green" onClick={() => navigate('/')} className="gap-2">
+                        <ArrowLeft size={20} />
+                        ANA ÜS
+                    </NeonButton>
+                    <h1 className="text-4xl font-display font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-200 neon-text">
+                        GÖKSEL İLİMLER
+                    </h1>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {religiousCurriculum.topics.map((topic) => (
+                        <GlassCard
+                            key={topic.id}
+                            hoverEffect
+                            onClick={() => setSelectedTopic(topic.id)}
+                            className="group border-emerald-500/20 hover:border-emerald-500/60 cursor-pointer h-full flex flex-col"
+                        >
+                            <div className="p-4 bg-emerald-500/20 rounded-2xl w-fit mb-4 text-emerald-400 group-hover:scale-110 transition-transform shadow-[0_0_15px_rgba(80,200,120,0.3)]">
+                                {topic.id === 'elif-ba' ? <Star size={40} /> :
+                                    topic.id === 'surahs' ? <BookOpen size={40} /> : <Moon size={40} />}
+                            </div>
+                            <h3 className="text-2xl font-bold font-display text-white mb-2">{topic.title}</h3>
+                            <p className="text-emerald-100/70 text-lg">{topic.description}</p>
+                        </GlassCard>
+                    ))}
+                </div>
+            </div>
+        );
+    }
+
+    if (!currentQuestion) return <div className="text-center text-emerald-400 animate-pulse mt-20 text-2xl">NUR İNİYOR...</div>;
+
+    const isArabic = currentQuestion.type === 'letter';
 
     return (
-        <div className="max-w-2xl mx-auto space-y-8 relative">
-            <div className="flex items-center justify-between pb-4 border-b border-white/10">
-                <Button variant="secondary" onClick={() => navigate('/')} className="gap-2">
-                    <ArrowLeft size={20} />
-                    Çıkış
-                </Button>
+        <div className="max-w-3xl mx-auto space-y-8 relative">
+            {/* HUD Header */}
+            <div className="flex items-center justify-between p-4 bg-black/40 backdrop-blur-md rounded-2xl border border-white/10 shadow-lg">
+                <NeonButton variant="green" size='sm' onClick={() => setSelectedTopic(null)} className="gap-2">
+                    <ArrowLeft size={16} />
+                    KONULAR
+                </NeonButton>
 
                 {isCampaign && (
-                    <div className="flex-1 mx-8">
-                        <div className="h-4 bg-gray-800 rounded-full overflow-hidden">
-                            <div
-                                className="h-full bg-green-500 transition-all duration-500"
-                                style={{ width: `${((10 - questionsLeft) / 10) * 100}%` }}
+                    <div className="flex-1 mx-8 flex flex-col gap-1">
+                        <div className="flex justify-between text-xs text-emerald-400/70 font-mono">
+                            <span>RUHANİ İLERLEME</span>
+                            <span>{10 - questionsLeft} / 10</span>
+                        </div>
+                        <div className="h-3 bg-white/10 rounded-full overflow-hidden border border-white/10 relative">
+                            <motion.div
+                                className="h-full bg-gradient-to-r from-emerald-500 to-teal-300 shadow-[0_0_10px_#50C878]"
+                                initial={{ width: 0 }}
+                                animate={{ width: `${((10 - questionsLeft) / 10) * 100}%` }}
+                                transition={{ duration: 0.5 }}
                             />
                         </div>
                     </div>
                 )}
 
-                <div className="flex items-center gap-2 bg-red-900/20 px-3 py-1 rounded-full border border-red-500/30">
-                    <Heart className="text-red-500 fill-red-500" size={20} />
-                    <span className="font-bold text-white">{hearts}</span>
+                <div className="flex items-center gap-2 bg-red-500/10 px-4 py-2 rounded-xl border border-red-500/30 shadow-[0_0_10px_rgba(255,0,85,0.2)]">
+                    <motion.div
+                        animate={{ scale: [1, 1.2, 1] }}
+                        transition={{ repeat: Infinity, duration: 1.5 }}
+                        className="text-red-500"
+                    >
+                        <Heart size={20} fill="currentColor" />
+                    </motion.div>
+                    <span className="font-bold text-white font-mono text-xl">{hearts}</span>
                 </div>
             </div>
 
-            <Card className="text-center py-12 relative overflow-visible bg-[#0F172A] border-green-500/30">
-                {/* Decorative Icon */}
-                <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-[#0F172A] p-4 rounded-full border-4 border-green-500 shadow-[0_0_30px_rgba(34,197,94,0.3)]">
-                    <Star size={48} className="text-green-400 animate-pulse" />
+            <GlassCard className="text-center py-12 relative overflow-visible bg-[#0F172A]/80 border-emerald-500/30 shadow-[0_0_50px_rgba(80,200,120,0.1)]">
+                {/* Holographic Projector Effect */}
+                <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-[#0F172A] p-4 rounded-full border-4 border-emerald-500 shadow-[0_0_30px_rgba(80,200,120,0.5)] z-20">
+                    <Sparkles size={40} className="text-emerald-400 animate-pulse" />
                 </div>
 
-                <div className="mt-8 mb-12">
-                    <span className="inline-block px-4 py-1 rounded-full bg-green-900/30 text-sm text-green-200 mb-4 border border-green-500/20">
-                        {currentQuestion.type === 'letter' ? 'Bu harf hangisidir?' :
-                            currentQuestion.type === 'surah' ? 'Bu hangi suredir?' :
-                                'Soruya cevap ver'}
+                <div className="mt-8 mb-12 relative z-10 px-6">
+                    <span className="inline-block px-4 py-1 rounded-full bg-emerald-500/10 text-sm text-emerald-400 mb-6 border border-emerald-500/30 font-mono tracking-widest uppercase">
+                        {currentQuestion.type === 'letter' ? 'Harf Tanıma' :
+                            currentQuestion.type === 'surah' ? 'Sure Bilgisi' : 'İslami Bilgi'}
                     </span>
 
                     <motion.div
                         key={currentQuestion.id}
-                        initial={{ scale: 0.5, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
+                        initial={{ scale: 0.9, opacity: 0, filter: 'blur(10px)' }}
+                        animate={{ scale: 1, opacity: 1, filter: 'blur(0px)' }}
                         className={cn(
-                            "font-bold bg-white/5 inline-block px-12 py-6 rounded-3xl border-2 border-green-500/50 mt-4 block",
-                            currentQuestion.type === 'letter' ? "text-8xl font-serif" :
-                                currentQuestion.type === 'surah' ? "text-3xl md:text-4xl leading-relaxed font-serif" :
-                                    "text-3xl md:text-5xl"
+                            "font-bold text-white leading-relaxed drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]",
+                            isArabic ? "text-8xl font-serif py-4 text-emerald-200" : "text-2xl md:text-4xl font-display"
                         )}
                     >
                         {currentQuestion.question}
                     </motion.div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 max-w-md mx-auto px-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto px-4 relative z-10">
                     <AnimatePresence mode='popLayout'>
                         {options.map((option, idx) => (
                             <motion.button
@@ -187,20 +245,24 @@ export const ReligionGame = () => {
                                 initial={{ scale: 0.8, opacity: 0 }}
                                 animate={{ scale: 1, opacity: 1 }}
                                 transition={{ delay: idx * 0.1 }}
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
                                 onClick={() => handleAnswer(option)}
-                                className={cn(
-                                    "p-6 text-xl font-bold rounded-xl border-2 transition-all shadow-lg",
-                                    feedback === 'correct' && option === currentQuestion.answer
-                                        ? "bg-green-600 border-green-400 text-white shadow-green-500/50"
-                                        : feedback === 'wrong' && option !== currentQuestion.answer
-                                            ? "opacity-50"
-                                            : "bg-[#1E293B] border-[#334155] text-white hover:border-green-500 hover:bg-[#2D3F54]"
-                                )}
                                 disabled={feedback !== null}
+                                className={cn(
+                                    "p-6 text-xl font-bold rounded-xl border-2 transition-all shadow-lg text-center relative overflow-hidden group flex items-center justify-center font-display",
+                                    feedback === 'correct' && option === currentQuestion.answer
+                                        ? "bg-emerald-600 border-emerald-400 text-white shadow-[0_0_20px_rgba(80,200,120,0.5)]"
+                                        : feedback === 'wrong' && option !== currentQuestion.answer
+                                            ? "opacity-40 grayscale"
+                                            : feedback === 'wrong' && option === currentQuestion.answer
+                                                ? "bg-emerald-900/40 border-emerald-400 text-emerald-200"
+                                                : "bg-[#1E293B]/80 border-slate-700 text-slate-200 hover:border-emerald-500 hover:bg-emerald-900/20"
+                                )}
                             >
-                                {option}
+                                <span className="relative z-10">{option}</span>
+                                {/* Celestial Glow effect */}
+                                <div className="absolute inset-0 bg-gradient-to-t from-emerald-500/10 to-transparent pointer-events-none" />
                             </motion.button>
                         ))}
                     </AnimatePresence>
@@ -209,26 +271,52 @@ export const ReligionGame = () => {
                 <AnimatePresence>
                     {feedback && (
                         <motion.div
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
+                            initial={{ opacity: 0, y: 20, scale: 0.9 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
                             exit={{ opacity: 0 }}
                             className={cn(
-                                "mt-8 text-xl font-bold px-4",
-                                feedback === 'correct' ? "text-green-400" : "text-red-400"
+                                "absolute bottom-10 left-0 right-0 mx-auto w-max max-w-[90%] p-6 rounded-2xl border backdrop-blur-xl shadow-2xl z-50",
+                                feedback === 'correct'
+                                    ? "bg-emerald-900/90 border-emerald-500 text-emerald-100 shadow-emerald-900/50"
+                                    : "bg-red-900/90 border-red-500 text-red-100 shadow-red-900/50"
                             )}
                         >
-                            <div>
-                                {feedback === 'correct' ? "Maşallah! Doğru Bildin! 🌟" : `Yanlış. Doğrusu: ${currentQuestion.answer}`}
+                            <div className="text-2xl font-bold mb-2 flex items-center gap-3 justify-center">
+                                {feedback === 'correct' ? (
+                                    <>
+                                        <Trophy className="w-8 h-8 text-yellow-400" />
+                                        <span>MAŞALLAH! DOĞRU!</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <span>YANLIŞ CEVAP</span>
+                                    </>
+                                )}
                             </div>
+
+                            <div className="text-white text-lg font-mono">
+                                Doğrusu: <span className="font-bold text-emerald-300">{currentQuestion.answer}</span>
+                            </div>
+
                             {currentQuestion.explanation && (
-                                <div className="text-lg text-white/80 mt-2 font-normal">
-                                    💡 {currentQuestion.explanation}
+                                <div className="text-lg text-emerald-200/80 mt-2 max-w-md mx-auto italic">
+                                    ✨ {currentQuestion.explanation}
                                 </div>
+                            )}
+
+                            {isPractice && (
+                                <NeonButton
+                                    variant="green"
+                                    onClick={handleNextQuestion}
+                                    className="mt-4 mx-auto"
+                                >
+                                    SIRADAKİ SORU
+                                </NeonButton>
                             )}
                         </motion.div>
                     )}
                 </AnimatePresence>
-            </Card>
+            </GlassCard>
         </div>
     );
 };

@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Clock, Shapes, Calculator, Sparkles } from 'lucide-react';
+import { ArrowLeft, Clock, Shapes, Calculator, Sparkles, Trophy, Star } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { Button, Card, cn } from '../../components/ui/core';
+import { cn } from '../../components/ui/core';
+import { NeonButton, GlassCard } from '../../components/ui';
 import { mathCurriculum } from '../../data/curriculum';
 import { useGameStore } from '../../store/gameStore';
 import { GameOverlay } from '../../components/game/GameOverlay';
@@ -100,7 +101,8 @@ export const MathGame = () => {
         confetti({
             particleCount: 200,
             spread: 70,
-            origin: { y: 0.6 }
+            origin: { y: 0.6 },
+            colors: ['#00F0FF', '#BD00FF', '#FFD700']
         });
     };
 
@@ -168,116 +170,144 @@ export const MathGame = () => {
 
     if (!selectedTopic) {
         return (
-            <div className="max-w-4xl mx-auto space-y-8">
+            <div className="max-w-6xl mx-auto space-y-8 pb-20">
                 <div className="flex items-center justify-between">
-                    <Button variant="secondary" onClick={() => navigate('/')} className="gap-2">
+                    <NeonButton variant="blue" onClick={() => navigate('/')} className="gap-2">
                         <ArrowLeft size={20} />
-                        Ana Üs
-                    </Button>
-                    <h1 className="text-3xl font-bold text-white">Görev Seçimi</h1>
+                        ANA ÜS
+                    </NeonButton>
+                    <h1 className="text-4xl font-display font-bold text-transparent bg-clip-text bg-gradient-to-r from-neon-blue to-purple-500 neon-text">
+                        GÖREV SEÇİMİ
+                    </h1>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <motion.button
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    {/* Mixed Mode Card */}
+                    <GlassCard
+                        hoverEffect
                         onClick={() => setSelectedTopic('mixed')}
-                        className="col-span-1 md:col-span-2 bg-gradient-to-r from-pink-500/20 to-purple-500/20 border-2 border-pink-500/50 p-8 rounded-2xl text-left hover:border-pink-500 transition-colors group"
+                        className="col-span-1 md:col-span-2 bg-gradient-to-r from-neon-pink/10 to-neon-purple/10 border-neon-pink/30 group"
                     >
-                        <div className="flex items-center gap-4 mb-4">
-                            <div className="p-3 bg-pink-500/20 rounded-xl text-pink-500 group-hover:bg-pink-500 group-hover:text-white transition-colors">
-                                <Sparkles size={32} />
+                        <div className="flex items-center gap-6">
+                            <div className="p-4 bg-neon-pink/20 rounded-2xl text-neon-pink group-hover:scale-110 transition-transform duration-300 shadow-[0_0_15px_rgba(255,0,153,0.3)]">
+                                <Trophy size={40} />
                             </div>
-                            <h3 className="text-2xl font-bold text-white">Karışık Sınav Modu</h3>
+                            <div>
+                                <h3 className="text-3xl font-display font-bold text-white mb-2">KARIŞIK SINAV MODU</h3>
+                                <p className="text-blue-200 text-lg">Hepsinden biraz! Yeteneklerini sına.</p>
+                            </div>
                         </div>
-                        <p className="text-gray-400 text-lg">Hepsinden biraz! Kendini dene.</p>
-                    </motion.button>
+                    </GlassCard>
 
-                    {mathCurriculum.topics.map((topic) => (
-                        <motion.button
+                    {mathCurriculum.topics.map((topic, index) => (
+                        <GlassCard
                             key={topic.id}
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
+                            hoverEffect
                             onClick={() => setSelectedTopic(topic.id)}
-                            className="bg-space-dark/80 border-2 border-neon-blue/30 p-8 rounded-2xl text-left hover:border-neon-blue transition-colors group"
+                            className="group border-neon-cyan/20 hover:border-neon-cyan/60"
                         >
                             <div className="flex items-center gap-4 mb-4">
-                                <div className="p-3 bg-neon-blue/20 rounded-xl text-neon-blue group-hover:bg-neon-blue group-hover:text-black transition-colors">
+                                <div className={`p-4 rounded-xl text-black transition-all duration-300 shadow-[0_0_15px_currentColor] group-hover:scale-110
+                                    ${index % 2 === 0 ? 'bg-neon-cyan text-black' : 'bg-neon-gold text-black'}
+                                `}>
                                     {topic.id === 'time' ? <Clock size={32} /> :
                                         topic.id === 'geometry' ? <Shapes size={32} /> :
                                             topic.id === 'patterns' ? <Sparkles size={32} /> :
                                                 <Calculator size={32} />}
                                 </div>
-                                <h3 className="text-2xl font-bold text-white">{topic.title}</h3>
+                                <h3 className="text-2xl font-bold font-display text-white group-hover:text-neon-cyan transition-colors">
+                                    {topic.title}
+                                </h3>
                             </div>
-                            <p className="text-gray-400 text-lg">{topic.description}</p>
-                        </motion.button>
+                            <p className="text-gray-300 text-lg">{topic.description}</p>
+                        </GlassCard>
                     ))}
                 </div>
             </div>
         );
     }
 
-    if (!question) return <div>Yükleniyor...</div>;
+    if (!question) return <div className="text-center text-neon-blue animate-pulse mt-20 text-2xl">YÜKLENİYOR...</div>;
 
     return (
-        <div className="max-w-2xl mx-auto space-y-8 relative">
-            {/* Header with Hearts/Progress */}
-            <div className="flex items-center justify-between pb-4 border-b border-white/10">
-                <Button variant="secondary" onClick={() => navigate('/')} className="gap-2">
-                    <ArrowLeft size={20} />
-                    Çıkış
-                </Button>
+        <div className="max-w-4xl mx-auto space-y-8 relative">
+            {/* HUD Header */}
+            <div className="flex items-center justify-between p-4 bg-black/40 backdrop-blur-md rounded-2xl border border-white/10 shadow-lg">
+                <NeonButton variant="blue" size='sm' onClick={() => navigate('/')} className="gap-2">
+                    <ArrowLeft size={16} />
+                    ÇIKIŞ
+                </NeonButton>
 
                 {isCampaign && (
-                    <div className="flex-1 mx-8">
-                        <div className="h-4 bg-gray-800 rounded-full overflow-hidden">
-                            <div
-                                className="h-full bg-green-500 transition-all duration-500"
-                                style={{ width: `${((10 - questionsLeft) / 10) * 100}%` }}
+                    <div className="flex-1 mx-8 flex flex-col gap-1">
+                        <div className="flex justify-between text-xs text-neon-cyan/70 font-mono">
+                            <span>İLERLEME</span>
+                            <span>{10 - questionsLeft} / 10</span>
+                        </div>
+                        <div className="h-3 bg-white/10 rounded-full overflow-hidden border border-white/10 relative">
+                            <motion.div
+                                className="h-full bg-gradient-to-r from-neon-green to-emerald-500 shadow-[0_0_10px_#00FF9D]"
+                                initial={{ width: 0 }}
+                                animate={{ width: `${((10 - questionsLeft) / 10) * 100}%` }}
+                                transition={{ duration: 0.5 }}
                             />
                         </div>
                     </div>
                 )}
 
-                <div className="flex items-center gap-2 bg-red-900/20 px-3 py-1 rounded-full border border-red-500/30">
-                    <div className="text-red-500">❤️</div>
-                    <span className="font-bold text-white">{hearts}</span>
+                <div className="flex items-center gap-2 bg-red-500/10 px-4 py-2 rounded-xl border border-red-500/30 shadow-[0_0_10px_rgba(255,0,85,0.2)]">
+                    <motion.div
+                        animate={{ scale: [1, 1.2, 1] }}
+                        transition={{ repeat: Infinity, duration: 1.5 }}
+                        className="text-red-500"
+                    >
+                        ❤️
+                    </motion.div>
+                    <span className="font-bold text-white font-mono text-xl">{hearts}</span>
                 </div>
             </div>
 
-            <Card className="text-center py-16 relative overflow-hidden bg-[#1A0F2E] border-purple-500/30">
+            <GlassCard className="text-center py-16 relative overflow-hidden bg-space-deep/80 border-neon-purple/30 shadow-[0_0_50px_rgba(189,0,255,0.1)]">
+                {/* Background Grid Animation */}
+                <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 pointer-events-none" />
+                <div className="absolute top-0 w-full h-px bg-gradient-to-r from-transparent via-neon-purple to-transparent opacity-50" />
+                <div className="absolute bottom-0 w-full h-px bg-gradient-to-r from-transparent via-neon-purple to-transparent opacity-50" />
+
                 {/* Question Content */}
                 {question.type === 'static' ? (
-                    <div className="mb-12 px-6">
-                        <h2 className="text-2xl md:text-3xl font-bold text-white leading-relaxed">
+                    <div className="mb-12 px-6 relative z-10">
+                        <h2 className="text-3xl md:text-4xl font-bold font-display text-white leading-relaxed drop-shadow-lg">
                             {question.text}
                         </h2>
                     </div>
                 ) : (
-                    <div className="flex items-center justify-center gap-4 text-6xl font-bold font-mono text-white mb-12">
-                        <motion.span
-                            key={question.n1} // Force animation on change
-                            initial={{ y: -20, opacity: 0 }}
+                    <div className="flex items-center justify-center gap-6 text-7xl font-bold font-mono text-white mb-16 relative z-10">
+                        <motion.div
+                            key={question.n1}
+                            initial={{ y: -50, opacity: 0 }}
                             animate={{ y: 0, opacity: 1 }}
+                            className="bg-black/30 px-6 py-4 rounded-2xl border border-white/10 backdrop-blur-sm shadow-[0_0_20px_rgba(0,240,255,0.1)]"
                         >
                             {question.n1}
-                        </motion.span>
-                        <span className="text-neon-blue">{question.operation}</span>
-                        <motion.span
+                        </motion.div>
+                        <span className="text-neon-pink text-8xl drop-shadow-[0_0_10px_rgba(255,0,153,0.5)]">{question.operation}</span>
+                        <motion.div
                             key={question.n2}
-                            initial={{ y: -20, opacity: 0 }}
+                            initial={{ y: -50, opacity: 0 }}
                             animate={{ y: 0, opacity: 1 }}
                             transition={{ delay: 0.1 }}
+                            className="bg-black/30 px-6 py-4 rounded-2xl border border-white/10 backdrop-blur-sm shadow-[0_0_20px_rgba(0,240,255,0.1)]"
                         >
                             {question.n2}
-                        </motion.span>
-                        <span className="text-gray-400">=</span>
-                        <span className="text-yellow-400">?</span>
+                        </motion.div>
+                        <span className="text-gray-500 text-6xl">=</span>
+                        <div className="w-32 h-32 flex items-center justify-center bg-white/5 rounded-2xl border-2 border-dashed border-white/20 text-neon-gold animate-pulse">
+                            ?
+                        </div>
                     </div>
                 )}
 
-                <div className="grid grid-cols-2 gap-4 max-w-md mx-auto px-4">
+                <div className="grid grid-cols-2 gap-6 max-w-2xl mx-auto px-4 relative z-10">
                     <AnimatePresence mode='popLayout'>
                         {question.options.map((option, idx) => (
                             <motion.button
@@ -288,15 +318,17 @@ export const MathGame = () => {
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
                                 onClick={() => handleAnswer(option)}
-                                className={cn(
-                                    "h-20 text-2xl font-bold rounded-2xl border-2 transition-all shadow-lg",
-                                    feedback === 'correct' && option === question.answer
-                                        ? "bg-green-500 border-green-400 text-white shadow-green-500/50"
-                                        : feedback === 'wrong' && option !== question.answer
-                                            ? "opacity-50"
-                                            : "bg-[#2D1B4E] border-[#4D2B8E] text-white hover:border-neon-blue hover:bg-[#3D2B6E]"
-                                )}
                                 disabled={feedback !== null}
+                                className={cn(
+                                    "h-24 text-3xl font-bold rounded-2xl border-2 transition-all shadow-lg font-mono tracking-wider relative overflow-hidden",
+                                    feedback === 'correct' && option === question.answer
+                                        ? "bg-neon-green text-black border-neon-green shadow-[0_0_30px_#00FF9D]"
+                                        : feedback === 'wrong' && option !== question.answer
+                                            ? "opacity-30 grayscale"
+                                            : feedback === 'wrong' && option === question.answer // Show correct answer even on wrong guess
+                                                ? "bg-neon-green/50 text-white border-neon-green"
+                                                : "bg-space-light/50 border-white/10 text-white hover:border-neon-cyan hover:bg-neon-cyan/10 hover:shadow-[0_0_15px_rgba(0,240,255,0.3)]"
+                                )}
                             >
                                 {option}
                             </motion.button>
@@ -307,35 +339,53 @@ export const MathGame = () => {
                 <AnimatePresence>
                     {feedback && (
                         <motion.div
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
+                            initial={{ opacity: 0, y: 20, scale: 0.8 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
                             exit={{ opacity: 0 }}
                             className={cn(
-                                "mt-8 text-xl font-bold px-4",
-                                feedback === 'correct' ? "text-green-400" : "text-red-400"
+                                "absolute bottom-10 left-0 right-0 mx-auto w-max max-w-[90%] p-6 rounded-2xl border backdrop-blur-xl shadow-2xl z-50",
+                                feedback === 'correct'
+                                    ? "bg-neon-green/10 border-neon-green text-neon-green shadow-neon-green/20"
+                                    : "bg-neon-red/10 border-neon-red text-neon-red shadow-neon-red/20"
                             )}
                         >
-                            <div>
-                                {feedback === 'correct' ? "Harika! Doğru Cevap! 📚" : `Yanlış! Doğru cevap: ${question.answer}`}
+                            <div className="text-2xl font-bold mb-2 flex items-center gap-3 justify-center">
+                                {feedback === 'correct' ? (
+                                    <>
+                                        <Trophy className="w-8 h-8" />
+                                        <span>HARİKA! DOĞRU CEVAP!</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <span>⚠️ YANLIŞ CEVAP</span>
+                                    </>
+                                )}
                             </div>
+
+                            <div className="text-white text-lg font-mono">
+                                Doğru Cevap: <span className="font-bold text-neon-gold">{question.answer}</span>
+                            </div>
+
                             {question.explanation && (
-                                <div className="text-lg text-white/80 mt-2 font-normal">
+                                <div className="text-base text-gray-300 mt-2 max-w-md mx-auto">
                                     💡 {question.explanation}
                                 </div>
                             )}
 
                             {isPractice && (
-                                <Button
+                                <NeonButton
                                     onClick={handleNextQuestion}
-                                    className="bg-neon-blue text-black hover:bg-white font-bold px-8 py-3 text-lg mt-4"
+                                    variant="cyan"
+                                    className="mt-4 w-full"
                                 >
-                                    Sıradaki Soru <ArrowLeft className="rotate-180 ml-2" />
-                                </Button>
+                                    SIRADAKİ SORU <ArrowLeft className="rotate-180 ml-2 inline-block" />
+                                </NeonButton>
                             )}
                         </motion.div>
                     )}
                 </AnimatePresence>
-            </Card>
+            </GlassCard>
         </div>
     );
 };
+
