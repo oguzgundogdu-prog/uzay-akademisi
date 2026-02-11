@@ -88,9 +88,7 @@ export const TurkishGame = () => {
         }
     }, [selectedTopic]);
 
-    const handleNextQuestion = () => {
-        generateQuestion();
-    };
+
 
     const handleAnswer = (selectedOption: string) => {
         if (!currentPair || feedback) return;

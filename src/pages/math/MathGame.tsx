@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Clock, Shapes, Calculator, Sparkles, Trophy, Star } from 'lucide-react';
+import { ArrowLeft, Clock, Shapes, Calculator, Sparkles, Trophy } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { cn } from '../../components/ui/core';
 import { NeonButton, GlassCard } from '../../components/ui';
@@ -172,7 +172,7 @@ export const MathGame = () => {
         return (
             <div className="max-w-6xl mx-auto space-y-8 pb-20">
                 <div className="flex items-center justify-between">
-                    <NeonButton variant="blue" onClick={() => navigate('/')} className="gap-2">
+                    <NeonButton variant="cyan" onClick={() => navigate('/')} className="gap-2">
                         <ArrowLeft size={20} />
                         ANA ÜS
                     </NeonButton>
@@ -233,7 +233,7 @@ export const MathGame = () => {
         <div className="max-w-4xl mx-auto space-y-8 relative">
             {/* HUD Header */}
             <div className="flex items-center justify-between p-4 bg-black/40 backdrop-blur-md rounded-2xl border border-white/10 shadow-lg">
-                <NeonButton variant="blue" size='sm' onClick={() => navigate('/')} className="gap-2">
+                <NeonButton variant="cyan" size='sm' onClick={() => navigate('/')} className="gap-2">
                     <ArrowLeft size={16} />
                     ÇIKIŞ
                 </NeonButton>

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
-import { ArrowLeft, Moon, BookOpen, Star, Heart, Sparkles, Trophy } from 'lucide-react';
+import { ArrowLeft, Moon, BookOpen, Heart, Sparkles, Trophy } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { cn } from '../../components/ui/core';
 import { NeonButton, GlassCard } from '../../components/ui';
@@ -158,7 +158,7 @@ export const ReligionGame = () => {
                             className="group border-emerald-500/20 hover:border-emerald-500/60 cursor-pointer h-full flex flex-col"
                         >
                             <div className="p-4 bg-emerald-500/20 rounded-2xl w-fit mb-4 text-emerald-400 group-hover:scale-110 transition-transform shadow-[0_0_15px_rgba(80,200,120,0.3)]">
-                                {topic.id === 'elif-ba' ? <Star size={40} /> :
+                                {topic.id === 'prayer-duas' ? <Sparkles size={40} /> :
                                     topic.id === 'surahs' ? <BookOpen size={40} /> : <Moon size={40} />}
                             </div>
                             <h3 className="text-2xl font-bold font-display text-white mb-2">{topic.title}</h3>
@@ -221,7 +221,7 @@ export const ReligionGame = () => {
                 <div className="mt-8 mb-12 relative z-10 px-6">
                     <span className="inline-block px-4 py-1 rounded-full bg-emerald-500/10 text-sm text-emerald-400 mb-6 border border-emerald-500/30 font-mono tracking-widest uppercase">
                         {currentQuestion.type === 'letter' ? 'Harf Tanıma' :
-                            currentQuestion.type === 'surah' ? 'Sure Bilgisi' : 'İslami Bilgi'}
+                            currentQuestion.type === 'surah' ? 'Sure/Dua Bilgisi' : 'İslami Bilgi'}
                     </span>
 
                     <motion.div
