@@ -7,6 +7,8 @@ import { ScienceGame } from './pages/science/ScienceGame';
 import { SocialGame } from './pages/social/SocialGame';
 import { LifeGame } from './pages/life/LifeGame';
 import { ReligionGame } from './pages/religion/ReligionGame';
+import { EnglishGame } from './pages/english/EnglishGame';
+import { LegoBuilderGame } from './pages/lego/LegoBuilderGame';
 
 function App() {
   return (
@@ -20,6 +22,8 @@ function App() {
           <Route path="/social" element={<SocialGame />} />
           <Route path="/life" element={<LifeGame />} />
           <Route path="/religion" element={<ReligionGame />} />
+          <Route path="/english" element={<EnglishGame />} />
+          <Route path="/lego-builder" element={<LegoBuilderGame />} />
         </Routes>
       </SpaceLayout>
     </BrowserRouter>

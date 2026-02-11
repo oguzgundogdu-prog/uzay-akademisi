@@ -1,391 +1,348 @@
-import { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Clock, Shapes, Calculator, Sparkles, Trophy } from 'lucide-react';
+import { ArrowLeft, Sparkles, Trophy, Lock, Play } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { cn } from '../../components/ui/core';
 import { NeonButton, GlassCard } from '../../components/ui';
-import { mathCurriculum } from '../../data/curriculum';
 import { useGameStore } from '../../store/gameStore';
 import { GameOverlay } from '../../components/game/GameOverlay';
-import { MathGenerator } from '../../utils/MathGenerator';
+import { mathData } from '../../data/modules/math-data'; // New Data Source
+import type { Level, Question } from '../../data/types';
 
-type Question = {
-    text?: string;
-    n1?: number;
-    n2?: number;
-    operation?: '+' | '-' | 'x' | '÷';
-    answer: number | string;
-    options: (number | string)[];
-    type: 'procedural' | 'static';
-    explanation?: string;
-};
+import { useSound } from '../../hooks/useSound';
 
 export const MathGame = () => {
     const navigate = useNavigate();
-    const location = useLocation();
-    const { addXp, useHeart, hearts, addGem, unlockNode } = useGameStore();
+    // Removed unused location hook
+    const { addXp, useHeart, hearts, addGem } = useGameStore();
+    const { playCorrect, playWrong, playComplete, playGameOver } = useSound();
 
-    // Campaign Mode: topic & nodeId passed via state
-    const [selectedTopic, setSelectedTopic] = useState<string | null>(location.state?.topic || null);
-    const nodeId = location.state?.nodeId;
-    const isCampaign = !!nodeId;
-    const isPractice = location.state?.mode === 'practice';
-
-    const [question, setQuestion] = useState<Question | null>(null);
+    // -- STATE --
+    const [selectedLevelId, setSelectedLevelId] = useState<string | null>(null);
+    const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+    const [score, setScore] = useState(0); // Tracks correct answers
+    const [gameState, setGameState] = useState<'menu' | 'playing' | 'level-complete' | 'game-over'>('menu');
     const [feedback, setFeedback] = useState<'correct' | 'wrong' | null>(null);
-    const [streak, setStreak] = useState(0);
 
-    // Game State
-    const [gameState, setGameState] = useState<'playing' | 'win' | 'lose'>('playing');
-    const [questionsLeft, setQuestionsLeft] = useState(10); // 10 questions per level
+    // Derived State
+    const currentLevel: Level | undefined = mathData.levels.find(l => l.id === selectedLevelId);
+    const currentQuestion: Question | undefined = currentLevel?.questions[currentQuestionIndex];
+    const totalQuestions = currentLevel?.questions.length || 0;
 
-    const generateQuestion = () => {
-        if (!selectedTopic) return;
-
-        // If Campaign mode finished
-        if (isCampaign && questionsLeft <= 0) {
-            handleWin();
-            return;
-        }
-
-        let newQuestion;
-
-        // Use the generator based on topic
-        if (selectedTopic === 'mixed') {
-            newQuestion = MathGenerator.mixed();
-        } else if (selectedTopic === 'addition') {
-            newQuestion = MathGenerator.addition(isCampaign ? 1 : 2);
-        } else if (selectedTopic === 'subtraction') {
-            newQuestion = MathGenerator.subtraction(isCampaign ? 1 : 2);
-        } else if (selectedTopic === 'multiplication') {
-            newQuestion = MathGenerator.multiplication(isCampaign ? 1 : 2);
-        } else if (selectedTopic === 'division') {
-            newQuestion = MathGenerator.division(isCampaign ? 1 : 2);
-        } else {
-            // Fallback for other topics like patterns/geo (keep existing logic or use static data)
-            const topicData = mathCurriculum.topics.find(t => t.id === selectedTopic);
-            if (topicData && topicData.items.length > 0) {
-                const randomItem = topicData.items[Math.floor(Math.random() * topicData.items.length)];
-                setQuestion({
-                    text: randomItem.question,
-                    answer: randomItem.answer,
-                    options: [...randomItem.options].sort(() => Math.random() - 0.5),
-                    type: 'static',
-                    explanation: randomItem.explanation
-                });
-                setFeedback(null);
-                return;
-            }
-            // Fallback if data missing
-            newQuestion = MathGenerator.addition(1);
-        }
-
-        setQuestion({
-            n1: newQuestion.n1,
-            n2: newQuestion.n2,
-            operation: newQuestion.operation,
-            text: newQuestion.text,
-            answer: newQuestion.answer,
-            options: newQuestion.options,
-            type: 'procedural'
-        });
+    // -- HELPERS --
+    const startGame = (levelId: string) => {
+        setSelectedLevelId(levelId);
+        setCurrentQuestionIndex(0);
+        setScore(0);
+        setGameState('playing');
         setFeedback(null);
     };
 
-    const handleWin = () => {
-        if (!isCampaign) return;
-        setGameState('win');
-        unlockNode(nodeId);
-        addGem(50);
-        confetti({
-            particleCount: 200,
-            spread: 70,
-            origin: { y: 0.6 },
-            colors: ['#00F0FF', '#BD00FF', '#FFD700']
-        });
-    };
+    const handleAnswer = (option: string | number) => {
+        if (!currentQuestion || feedback) return; // Prevent double clicks
 
-    useEffect(() => {
-        if (selectedTopic) {
-            generateQuestion();
-        }
-    }, [selectedTopic]);
+        const isCorrect = option === currentQuestion.answer;
 
-    // Manual Advance for Practice
-    const handleNextQuestion = () => {
-        generateQuestion();
-    };
-
-    const handleAnswer = (option: number | string) => {
-        if (!question || feedback) return;
-
-        if (option === question.answer) {
+        if (isCorrect) {
+            playCorrect();
             setFeedback('correct');
-            setStreak(s => s + 1);
-            addXp(10 + (streak * 2));
-
-            if (isCampaign) {
-                setQuestionsLeft(prev => prev - 1);
-            }
+            setScore(s => s + 1);
+            addXp(15);
 
             confetti({
-                particleCount: 30,
-                spread: 50,
+                particleCount: 50,
+                spread: 60,
                 origin: { y: 0.7 },
-                colors: ['#00F0FF', '#BD00FF', '#FFD700']
+                colors: ['#00FF9D', '#00F0FF']
             });
-
-            // Auto-advance only if NOT practice
-            if (!isPractice) {
-                if (isCampaign && questionsLeft <= 1) {
-                    setTimeout(() => handleWin(), 1500);
-                } else {
-                    setTimeout(generateQuestion, 2500);
-                }
-            }
         } else {
+            playWrong();
             setFeedback('wrong');
-            setStreak(0);
+            useHeart(); // Deduct 1 heart
 
-            if (!isPractice) {
-                const hasHearts = useHeart();
-                if (!hasHearts) {
-                    setGameState('lose');
-                }
+            // Check if game over immediately due to hearts? 
+            if (hearts <= 1) { // 1 because useHeart hasn't updated state yet in this render cycle roughly
+                // Actually useHeart updates store, but local 'hearts' valid might be stale? 
+                // Better: Let the store subscription handle it or check GameOverlay. 
+                // We will rely on hearts check in render or checking store value.
+                // allow animation to play first.
             }
+        }
+
+        // AUTO ADVANCE LOGIC (The "Fix")
+        // Whether right or wrong, we move on after a delay.
+        setTimeout(() => {
+            if (hearts <= 0 && !isCorrect) { // Double check hearts
+                playGameOver();
+                setGameState('game-over');
+                return;
+            }
+
+            if (currentQuestionIndex < totalQuestions - 1) {
+                // Next Question
+                setCurrentQuestionIndex(prev => prev + 1);
+                setFeedback(null);
+            } else {
+                // Modified: Finish Level
+                finishLevel();
+            }
+        }, isCorrect ? 1500 : 3000); // 3s wait for wrong answers to read explanation
+    };
+
+    const finishLevel = () => {
+        // Calculate Stars
+        const percentage = (score / totalQuestions) * 100;
+        let stars = 0;
+        if (percentage >= 90) stars = 3;
+        else if (percentage >= 70) stars = 2;
+        else if (percentage >= 50) stars = 1;
+
+        if (stars > 0) {
+            playComplete();
+            setGameState('level-complete');
+            addGem(currentLevel?.rewards.gems || 0);
+            addXp(currentLevel?.rewards.xp || 0);
+            confetti({ particleCount: 200, spread: 100, origin: { y: 0.6 } });
+        } else {
+            playGameOver();
+            setGameState('game-over'); // Failed to pass
         }
     };
 
-    if (gameState !== 'playing') {
+    // -- RENDER: GAME OVER / WIN --
+    if (gameState === 'level-complete' || gameState === 'game-over') {
         return (
             <GameOverlay
-                type={gameState === 'win' ? 'level-complete' : 'game-over'}
-                gemsEarned={50}
-                onRestart={() => window.location.reload()} // Simple restart
-                onHome={() => navigate('/')}
+                type={gameState}
+                gemsEarned={gameState === 'level-complete' ? currentLevel?.rewards.gems : 0}
+                onRestart={() => {
+                    if (selectedLevelId) startGame(selectedLevelId);
+                }}
+                onHome={() => setGameState('menu')}
             />
         );
     }
 
-    if (!selectedTopic) {
+    // -- RENDER: PLAYING --
+    if (gameState === 'playing' && currentQuestion) {
         return (
-            <div className="max-w-6xl mx-auto space-y-8 pb-20">
-                <div className="flex items-center justify-between">
-                    <NeonButton variant="cyan" onClick={() => navigate('/')} className="gap-2">
-                        <ArrowLeft size={20} />
-                        ANA ÜS
+            <div className="max-w-4xl mx-auto space-y-8 relative py-8">
+                {/* HUD */}
+                <div className="flex items-center justify-between p-4 bg-black/40 backdrop-blur-md rounded-2xl border border-white/10 shadow-lg top-0 sticky z-50">
+                    <NeonButton variant="blue" size='sm' onClick={() => setGameState('menu')} className="gap-2">
+                        <ArrowLeft size={16} />
+                        GÖREV İPTAL
                     </NeonButton>
-                    <h1 className="text-4xl font-display font-bold text-transparent bg-clip-text bg-gradient-to-r from-neon-blue to-purple-500 neon-text">
-                        GÖREV SEÇİMİ
-                    </h1>
-                </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    {/* Mixed Mode Card */}
-                    <GlassCard
-                        hoverEffect
-                        onClick={() => setSelectedTopic('mixed')}
-                        className="col-span-1 md:col-span-2 bg-gradient-to-r from-neon-pink/10 to-neon-purple/10 border-neon-pink/30 group"
-                    >
-                        <div className="flex items-center gap-6">
-                            <div className="p-4 bg-neon-pink/20 rounded-2xl text-neon-pink group-hover:scale-110 transition-transform duration-300 shadow-[0_0_15px_rgba(255,0,153,0.3)]">
-                                <Trophy size={40} />
-                            </div>
-                            <div>
-                                <h3 className="text-3xl font-display font-bold text-white mb-2">KARIŞIK SINAV MODU</h3>
-                                <p className="text-blue-200 text-lg">Hepsinden biraz! Yeteneklerini sına.</p>
-                            </div>
-                        </div>
-                    </GlassCard>
-
-                    {mathCurriculum.topics.map((topic, index) => (
-                        <GlassCard
-                            key={topic.id}
-                            hoverEffect
-                            onClick={() => setSelectedTopic(topic.id)}
-                            className="group border-neon-cyan/20 hover:border-neon-cyan/60"
-                        >
-                            <div className="flex items-center gap-4 mb-4">
-                                <div className={`p-4 rounded-xl text-black transition-all duration-300 shadow-[0_0_15px_currentColor] group-hover:scale-110
-                                    ${index % 2 === 0 ? 'bg-neon-cyan text-black' : 'bg-neon-gold text-black'}
-                                `}>
-                                    {topic.id === 'time' ? <Clock size={32} /> :
-                                        topic.id === 'geometry' ? <Shapes size={32} /> :
-                                            topic.id === 'patterns' ? <Sparkles size={32} /> :
-                                                <Calculator size={32} />}
-                                </div>
-                                <h3 className="text-2xl font-bold font-display text-white group-hover:text-neon-cyan transition-colors">
-                                    {topic.title}
-                                </h3>
-                            </div>
-                            <p className="text-gray-300 text-lg">{topic.description}</p>
-                        </GlassCard>
-                    ))}
-                </div>
-            </div>
-        );
-    }
-
-    if (!question) return <div className="text-center text-neon-blue animate-pulse mt-20 text-2xl">YÜKLENİYOR...</div>;
-
-    return (
-        <div className="max-w-4xl mx-auto space-y-8 relative">
-            {/* HUD Header */}
-            <div className="flex items-center justify-between p-4 bg-black/40 backdrop-blur-md rounded-2xl border border-white/10 shadow-lg">
-                <NeonButton variant="cyan" size='sm' onClick={() => navigate('/')} className="gap-2">
-                    <ArrowLeft size={16} />
-                    ÇIKIŞ
-                </NeonButton>
-
-                {isCampaign && (
                     <div className="flex-1 mx-8 flex flex-col gap-1">
                         <div className="flex justify-between text-xs text-neon-cyan/70 font-mono">
-                            <span>İLERLEME</span>
-                            <span>{10 - questionsLeft} / 10</span>
+                            <span>GÖREV İLERLEMESİ</span>
+                            <span>{currentQuestionIndex + 1} / {totalQuestions}</span>
                         </div>
                         <div className="h-3 bg-white/10 rounded-full overflow-hidden border border-white/10 relative">
                             <motion.div
-                                className="h-full bg-gradient-to-r from-neon-green to-emerald-500 shadow-[0_0_10px_#00FF9D]"
+                                className="h-full bg-gradient-to-r from-neon-blue to-purple-500 shadow-[0_0_10px_#2979FF]"
                                 initial={{ width: 0 }}
-                                animate={{ width: `${((10 - questionsLeft) / 10) * 100}%` }}
+                                animate={{ width: `${((currentQuestionIndex + 1) / totalQuestions) * 100}%` }}
                                 transition={{ duration: 0.5 }}
                             />
                         </div>
                     </div>
-                )}
 
-                <div className="flex items-center gap-2 bg-red-500/10 px-4 py-2 rounded-xl border border-red-500/30 shadow-[0_0_10px_rgba(255,0,85,0.2)]">
-                    <motion.div
-                        animate={{ scale: [1, 1.2, 1] }}
-                        transition={{ repeat: Infinity, duration: 1.5 }}
-                        className="text-red-500"
-                    >
-                        ❤️
-                    </motion.div>
-                    <span className="font-bold text-white font-mono text-xl">{hearts}</span>
+                    <div className="flex items-center gap-2 bg-red-500/10 px-4 py-2 rounded-xl border border-red-500/30">
+                        <div className="animate-pulse text-red-500">❤️</div>
+                        <span className="font-bold text-white font-mono text-xl">{hearts}</span>
+                    </div>
                 </div>
-            </div>
 
-            <GlassCard className="text-center py-16 relative overflow-hidden bg-space-deep/80 border-neon-purple/30 shadow-[0_0_50px_rgba(189,0,255,0.1)]">
-                {/* Background Grid Animation */}
-                <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 pointer-events-none" />
-                <div className="absolute top-0 w-full h-px bg-gradient-to-r from-transparent via-neon-purple to-transparent opacity-50" />
-                <div className="absolute bottom-0 w-full h-px bg-gradient-to-r from-transparent via-neon-purple to-transparent opacity-50" />
-
-                {/* Question Content */}
-                {question.type === 'static' ? (
-                    <div className="mb-12 px-6 relative z-10">
-                        <h2 className="text-3xl md:text-4xl font-bold font-display text-white leading-relaxed drop-shadow-lg">
-                            {question.text}
+                {/* GAME AREA */}
+                <GlassCard className="text-center py-12 relative overflow-visible bg-space-deep/80 border-neon-blue/30 min-h-[400px] flex flex-col justify-center">
+                    {/* Question */}
+                    <motion.div
+                        key={currentQuestion.id} // Re-animate on new question
+                        initial={{ opacity: 0, x: 50 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -50 }}
+                        className="mb-12 relative z-10 px-6"
+                    >
+                        <h2 className={cn(
+                            "font-bold font-display text-white leading-relaxed drop-shadow-lg",
+                            currentQuestion.text.length > 50 ? "text-2xl" : "text-4xl"
+                        )}>
+                            {currentQuestion.text}
                         </h2>
-                    </div>
-                ) : (
-                    <div className="flex items-center justify-center gap-6 text-7xl font-bold font-mono text-white mb-16 relative z-10">
-                        <motion.div
-                            key={question.n1}
-                            initial={{ y: -50, opacity: 0 }}
-                            animate={{ y: 0, opacity: 1 }}
-                            className="bg-black/30 px-6 py-4 rounded-2xl border border-white/10 backdrop-blur-sm shadow-[0_0_20px_rgba(0,240,255,0.1)]"
-                        >
-                            {question.n1}
-                        </motion.div>
-                        <span className="text-neon-pink text-8xl drop-shadow-[0_0_10px_rgba(255,0,153,0.5)]">{question.operation}</span>
-                        <motion.div
-                            key={question.n2}
-                            initial={{ y: -50, opacity: 0 }}
-                            animate={{ y: 0, opacity: 1 }}
-                            transition={{ delay: 0.1 }}
-                            className="bg-black/30 px-6 py-4 rounded-2xl border border-white/10 backdrop-blur-sm shadow-[0_0_20px_rgba(0,240,255,0.1)]"
-                        >
-                            {question.n2}
-                        </motion.div>
-                        <span className="text-gray-500 text-6xl">=</span>
-                        <div className="w-32 h-32 flex items-center justify-center bg-white/5 rounded-2xl border-2 border-dashed border-white/20 text-neon-gold animate-pulse">
-                            ?
-                        </div>
-                    </div>
-                )}
+                    </motion.div>
 
-                <div className="grid grid-cols-2 gap-6 max-w-2xl mx-auto px-4 relative z-10">
-                    <AnimatePresence mode='popLayout'>
-                        {question.options.map((option, idx) => (
-                            <motion.button
-                                key={`${idx}-${option}`}
-                                initial={{ scale: 0.8, opacity: 0 }}
-                                animate={{ scale: 1, opacity: 1 }}
-                                transition={{ delay: idx * 0.1 }}
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                onClick={() => handleAnswer(option)}
-                                disabled={feedback !== null}
+                    {/* Options */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto px-4 w-full relative z-10">
+                        <AnimatePresence mode='popLayout'>
+                            {currentQuestion.options.map((option, idx) => {
+                                // Dynamic Styling based on state
+                                let btnVariant: any = "cyan"; // default
+                                let extraClasses = "";
+
+                                if (feedback === 'correct' && option === currentQuestion.answer) {
+                                    btnVariant = "green";
+                                    extraClasses = "ring-4 ring-green-400 scale-105";
+                                } else if (feedback === 'wrong') {
+                                    if (option === currentQuestion.answer) {
+                                        btnVariant = "green"; // Show correct answer
+                                        extraClasses = "opacity-100 ring-2 ring-green-400";
+                                    } else if (option !== currentQuestion.answer) {
+                                        extraClasses = "opacity-30 grayscale";
+                                    }
+                                }
+
+                                return (
+                                    <motion.div
+                                        key={`${currentQuestion.id}-${idx}`}
+                                        initial={{ scale: 0.8, opacity: 0 }}
+                                        animate={{ scale: 1, opacity: 1 }}
+                                        transition={{ delay: idx * 0.1 }}
+                                    >
+                                        <NeonButton
+                                            variant={btnVariant}
+                                            onClick={() => handleAnswer(option)}
+                                            disabled={feedback !== null}
+                                            className={cn("w-full py-6 text-xl h-full", extraClasses)}
+                                        >
+                                            {option}
+                                        </NeonButton>
+                                    </motion.div>
+                                );
+                            })}
+                        </AnimatePresence>
+                    </div>
+
+                    {/* FEEDBACK OVERLAY (For wrong answers) */}
+                    <AnimatePresence>
+                        {feedback && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 50 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0 }}
                                 className={cn(
-                                    "h-24 text-3xl font-bold rounded-2xl border-2 transition-all shadow-lg font-mono tracking-wider relative overflow-hidden",
-                                    feedback === 'correct' && option === question.answer
-                                        ? "bg-neon-green text-black border-neon-green shadow-[0_0_30px_#00FF9D]"
-                                        : feedback === 'wrong' && option !== question.answer
-                                            ? "opacity-30 grayscale"
-                                            : feedback === 'wrong' && option === question.answer // Show correct answer even on wrong guess
-                                                ? "bg-neon-green/50 text-white border-neon-green"
-                                                : "bg-space-light/50 border-white/10 text-white hover:border-neon-cyan hover:bg-neon-cyan/10 hover:shadow-[0_0_15px_rgba(0,240,255,0.3)]"
+                                    "absolute bottom-4 left-0 right-0 mx-auto w-[90%] p-4 rounded-xl border backdrop-blur-xl shadow-2xl z-50",
+                                    feedback === 'correct'
+                                        ? "bg-green-900/90 border-green-500"
+                                        : "bg-red-900/90 border-red-500"
                                 )}
                             >
-                                {option}
-                            </motion.button>
-                        ))}
-                    </AnimatePresence>
-                </div>
+                                <div className="text-xl font-bold text-white mb-2 flex items-center justify-center gap-2">
+                                    {feedback === 'correct' ? (
+                                        <><Trophy size={24} className="text-yellow-400" /> DOĞRU!</>
+                                    ) : (
+                                        <><Lock size={24} className="text-red-300" /> YANLIŞ CEVAP - DOĞRUSU:</>
+                                    )}
+                                </div>
 
-                <AnimatePresence>
-                    {feedback && (
-                        <motion.div
-                            initial={{ opacity: 0, y: 20, scale: 0.8 }}
-                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                            exit={{ opacity: 0 }}
+                                <div className="text-white text-lg">
+                                    <span className="font-bold text-base bg-black/30 px-3 py-1 rounded-lg">
+                                        {currentQuestion.answer}
+                                    </span>
+                                </div>
+
+                                {currentQuestion.explanation && (
+                                    <div className="text-sm text-white/80 mt-2 italic">
+                                        "{currentQuestion.explanation}"
+                                    </div>
+                                )}
+
+                                <div className="mt-2 text-xs text-white/50 animate-pulse">
+                                    {feedback === 'correct' ? "Devam ediliyor..." : "3 saniye içinde geçiliyor..."}
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </GlassCard>
+            </div>
+        );
+    }
+
+    // -- RENDER: MENU (Start Screen) --
+    return (
+        <div className="max-w-6xl mx-auto space-y-8 pb-20 pt-8">
+            <div className="flex items-center justify-between">
+                <NeonButton variant="blue" onClick={() => navigate('/')} className="gap-2">
+                    <ArrowLeft size={20} />
+                    ANA ÜS
+                </NeonButton>
+                <h1 className="text-4xl font-display font-bold text-transparent bg-clip-text bg-gradient-to-r from-neon-blue to-purple-500 neon-text">
+                    MATEMATİK ÜSSÜ
+                </h1>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {mathData.levels.map((level) => {
+                    const { xp } = useGameStore();
+                    const isLocked = xp < level.unlockThreshold;
+
+                    return (
+                        <GlassCard
+                            key={level.id}
                             className={cn(
-                                "absolute bottom-10 left-0 right-0 mx-auto w-max max-w-[90%] p-6 rounded-2xl border backdrop-blur-xl shadow-2xl z-50",
-                                feedback === 'correct'
-                                    ? "bg-neon-green/10 border-neon-green text-neon-green shadow-neon-green/20"
-                                    : "bg-neon-red/10 border-neon-red text-neon-red shadow-neon-red/20"
+                                "relative group overflow-hidden transition-all duration-300 border-2",
+                                isLocked
+                                    ? "border-white/5 opacity-70 grayscale cursor-not-allowed"
+                                    : "border-neon-blue/30 hover:border-neon-blue hover:shadow-[0_0_30px_rgba(41,121,255,0.3)] cursor-pointer"
                             )}
+                            onClick={() => !isLocked && startGame(level.id)}
+                            hoverEffect={!isLocked}
                         >
-                            <div className="text-2xl font-bold mb-2 flex items-center gap-3 justify-center">
-                                {feedback === 'correct' ? (
-                                    <>
-                                        <Trophy className="w-8 h-8" />
-                                        <span>HARİKA! DOĞRU CEVAP!</span>
-                                    </>
+                            {/* Level Number Badge */}
+                            <div className={cn(
+                                "absolute top-4 left-4 w-10 h-10 rounded-full flex items-center justify-center font-bold border",
+                                isLocked ? "bg-white/5 border-white/10 text-gray-500" : "bg-white/10 text-white border-white/20"
+                            )}>
+                                {isLocked ? <Lock size={16} /> : level.order}
+                            </div>
+
+                            {/* Rewards Pill */}
+                            <div className="absolute top-4 right-4 flex gap-2">
+                                <span className="text-xs bg-neon-purple/20 text-neon-purple px-2 py-1 rounded border border-neon-purple/30">
+                                    +{level.rewards.xp} XP
+                                </span>
+                            </div>
+
+                            {/* Content */}
+                            <div className="mt-12 text-center space-y-4">
+                                <div className={cn(
+                                    "w-20 h-20 mx-auto rounded-full flex items-center justify-center mb-4 transition-transform group-hover:scale-110",
+                                    isLocked ? "bg-white/5" : "bg-neon-blue/20 shadow-[0_0_20px_rgba(41,121,255,0.4)]"
+                                )}>
+                                    {isLocked ? <Lock size={32} /> : <Play size={32} className="ml-1" />}
+                                </div>
+
+                                <h3 className="text-2xl font-bold font-display text-white">{level.title}</h3>
+                                <p className="text-gray-400 text-sm px-4 min-h-[40px]">{level.description}</p>
+
+                                {/* Lock Requirement or Start */}
+                                {isLocked ? (
+                                    <div className="mt-4 text-xs text-red-400 font-mono bg-red-900/20 py-1 px-3 rounded inline-block">
+                                        GEREKEN: {level.unlockThreshold} XP
+                                    </div>
                                 ) : (
-                                    <>
-                                        <span>⚠️ YANLIŞ CEVAP</span>
-                                    </>
+                                    <div className="mt-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <span className="text-neon-cyan text-sm tracking-widest font-bold">BAŞLAT &gt;</span>
+                                    </div>
                                 )}
                             </div>
+                        </GlassCard>
+                    );
+                })}
+            </div>
 
-                            <div className="text-white text-lg font-mono">
-                                Doğru Cevap: <span className="font-bold text-neon-gold">{question.answer}</span>
-                            </div>
-
-                            {question.explanation && (
-                                <div className="text-base text-gray-300 mt-2 max-w-md mx-auto">
-                                    💡 {question.explanation}
-                                </div>
-                            )}
-
-                            {isPractice && (
-                                <NeonButton
-                                    onClick={handleNextQuestion}
-                                    variant="cyan"
-                                    className="mt-4 w-full"
-                                >
-                                    SIRADAKİ SORU <ArrowLeft className="rotate-180 ml-2 inline-block" />
-                                </NeonButton>
-                            )}
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-            </GlassCard>
+            <div className="bg-blue-900/20 border border-blue-500/30 p-6 rounded-2xl text-center max-w-2xl mx-auto mt-12">
+                <Sparkles className="inline-block text-yellow-400 mb-2" />
+                <h4 className="text-xl font-bold text-white mb-2">YENİ MODÜL: GÖREV SİSTEMİ</h4>
+                <p className="text-blue-200">
+                    Artık sorular sonsuz değil! Her gezegeni tamamla, yıldızları topla ve bir sonraki seviyeyi aç.
+                    Yanlış yapsan bile oyun devam eder!
+                </p>
+            </div>
         </div>
     );
 };
+
 
