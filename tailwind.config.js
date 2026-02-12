@@ -25,8 +25,8 @@ export default {
                 }
             },
             fontFamily: {
-                sans: ['Outfit', 'sans-serif'],
-                display: ['Orbitron', 'sans-serif'],
+                sans: ['Nunito', 'sans-serif'],
+                display: ['Fredoka', 'sans-serif'],
                 mono: ['JetBrains Mono', 'monospace'],
             },
             backgroundImage: {

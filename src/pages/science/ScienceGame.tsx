@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, FlaskConical, Trophy, Atom } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { cn } from '../../components/ui/core';
 import { NeonButton, GlassCard } from '../../components/ui';
 import { useGameStore } from '../../store/gameStore';
 import { GameOverlay } from '../../components/game/GameOverlay';
@@ -13,261 +14,379 @@ import { useSound } from '../../hooks/useSound';
 
 export const ScienceGame = () => {
     const navigate = useNavigate();
-    const { addXp, useHeart, addGem } = useGameStore();
+    const {
+        addXp, useHeart, hearts, addGem, xp,
+        currentStreak, incrementStreak, resetStreak
+    } = useGameStore();
     const { playCorrect, playWrong, playComplete, playGameOver } = useSound();
 
     // -- STATE --
     const [selectedLevelId, setSelectedLevelId] = useState<string | null>(null);
-    const [currentLevel, setCurrentLevel] = useState<Level | null>(null);
+    const [shuffledQuestions, setShuffledQuestions] = useState<Question[]>([]);
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-    const [showResult, setShowResult] = useState<'correct' | 'incorrect' | null>(null);
     const [score, setScore] = useState(0);
     const [gameStatus, setGameStatus] = useState<'menu' | 'playing' | 'completed' | 'failed'>('menu');
-    const [questions, setQuestions] = useState<Question[]>([]);
+    const [feedback, setFeedback] = useState<'correct' | 'wrong' | null>(null);
 
-    // -- INITIALIZATION --
-    useEffect(() => {
-        if (selectedLevelId) {
-            const level = scienceData.levels.find(l => l.id === selectedLevelId);
-            if (level) {
-                setCurrentLevel(level);
-                setQuestions([...level.questions].sort(() => Math.random() - 0.5));
-                setGameStatus('playing');
-                setCurrentQuestionIndex(0);
-                setScore(0);
-                setShowResult(null);
-            }
+    // Powerups
+    const [isFiftyFiftyUsed, setIsFiftyFiftyUsed] = useState(false);
+    const [hiddenOptions, setHiddenOptions] = useState<number[]>([]);
+
+    // Time Bonus
+    const [questionStartTime, setQuestionStartTime] = useState<number>(0);
+    const [lastBonus, setLastBonus] = useState<number>(0);
+
+    // Motivational Popup
+    const [showMotivation, setShowMotivation] = useState<string | null>(null);
+
+    // Derived State
+    const currentLevel: Level | undefined = scienceData.levels.find(l => l.id === selectedLevelId);
+    const currentQuestion: Question | undefined = shuffledQuestions[currentQuestionIndex];
+    const totalQuestions = shuffledQuestions.length || 0;
+
+    // -- HELPERS --
+    const shuffleArray = <T,>(array: T[]): T[] => {
+        const newArr = [...array];
+        for (let i = newArr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [newArr[i], newArr[j]] = [newArr[j], newArr[i]];
         }
-    }, [selectedLevelId]);
+        return newArr;
+    };
 
-    const handleLevelSelect = (levelId: string) => {
+    const startGame = (levelId: string) => {
+        const level = scienceData.levels.find(l => l.id === levelId);
+        if (!level) return;
+
         setSelectedLevelId(levelId);
+        setShuffledQuestions(shuffleArray(level.questions));
+        setCurrentQuestionIndex(0);
+        setScore(0);
+        setGameStatus('playing');
+        setFeedback(null);
+        setIsFiftyFiftyUsed(false);
+        setHiddenOptions([]);
+        setQuestionStartTime(Date.now());
+        resetStreak();
     };
 
     const handleAnswer = (option: string | number) => {
-        if (showResult) return;
+        if (!currentQuestion || feedback) return;
 
-        const currentQuestion = questions[currentQuestionIndex];
         const isCorrect = option === currentQuestion.answer;
+        const endTime = Date.now();
+        const timeTaken = (endTime - questionStartTime) / 1000;
 
         if (isCorrect) {
             playCorrect();
-            setShowResult('correct');
-            setScore(s => s + 10);
+            setFeedback('correct');
+            setScore(s => s + 1);
+            incrementStreak();
+
+            const streakBonus = Math.min(currentStreak, 5);
+            const timeBonus = timeTaken < 7 ? 10 : 0;
+            setLastBonus(timeBonus);
+            addXp(15 + timeBonus, streakBonus);
+
+            if (currentStreak > 0 && currentStreak % 3 === 0) {
+                const messages = ["ZİHİN AÇIKLIĞI!", "BİLİM ADAMI!", "HARİKA KEŞİF!", "DURDURULAMAZ!"];
+                setShowMotivation(messages[Math.min(Math.floor(currentStreak / 3) - 1, messages.length - 1)]);
+                setTimeout(() => setShowMotivation(null), 2000);
+            }
+
             confetti({
-                particleCount: 100,
+                particleCount: 80,
                 spread: 70,
                 origin: { y: 0.6 },
-                colors: ['#4ade80', '#ffffff'] // Green and White
+                colors: ['#4ade80', '#ffffff']
             });
-            setTimeout(nextQuestion, 1500);
         } else {
             playWrong();
-            setShowResult('incorrect');
+            setFeedback('wrong');
+            resetStreak();
             useHeart();
-            setTimeout(nextQuestion, 3000);
         }
+
+        setTimeout(() => {
+            if (hearts <= 0 && !isCorrect) {
+                playGameOver();
+                setGameStatus('failed');
+                return;
+            }
+
+            if (currentQuestionIndex < totalQuestions - 1) {
+                setCurrentQuestionIndex(prev => prev + 1);
+                setFeedback(null);
+                setHiddenOptions([]);
+                setQuestionStartTime(Date.now());
+                setLastBonus(0);
+            } else {
+                finishLevel();
+            }
+        }, isCorrect ? 1500 : 3000);
     };
 
-    const nextQuestion = () => {
-        setShowResult(null);
-        if (currentQuestionIndex < questions.length - 1) {
-            setCurrentQuestionIndex(prev => prev + 1);
-        } else {
-            finishLevel();
-        }
+    const useFiftyFifty = () => {
+        if (isFiftyFiftyUsed || !currentQuestion || feedback) return;
+        const incorrectIndices = currentQuestion.options
+            .map((opt, idx) => (opt !== currentQuestion.answer ? idx : -1))
+            .filter(idx => idx !== -1);
+        const toHide = shuffleArray(incorrectIndices).slice(0, 2);
+        setHiddenOptions(toHide);
+        setIsFiftyFiftyUsed(true);
+        addGem(-5);
     };
 
     const finishLevel = () => {
-        const passed = score > 0;
-        if (passed) {
+        const percentage = (score / totalQuestions) * 100;
+        if (percentage >= 50) {
             playComplete();
             setGameStatus('completed');
-            if (currentLevel) {
-                addXp(currentLevel.rewards.xp);
-                addGem(currentLevel.rewards.gems);
-            }
+            addGem(currentLevel?.rewards.gems || 0);
+            addXp(currentLevel?.rewards.xp || 0);
+            confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
         } else {
             playGameOver();
             setGameStatus('failed');
         }
     };
 
-    const returnToMenu = () => {
-        setGameStatus('menu');
-        setSelectedLevelId(null);
-        setCurrentLevel(null);
-    };
-
-    const getDifficultyColor = (difficulty?: string) => {
-        switch (difficulty) {
-            case 'easy': return 'text-green-400';
-            case 'medium': return 'text-yellow-400';
-            case 'hard': return 'text-red-400';
-            default: return 'text-blue-400';
-        }
-    };
-
-    if (gameStatus === 'menu') {
+    if (gameStatus === 'completed' || gameStatus === 'failed') {
         return (
-            <div className="min-h-screen bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-green-900/40 via-[#0f1020] to-[#050608] p-4 md:p-8">
-                <div className="max-w-6xl mx-auto">
-                    <div className="flex items-center justify-between mb-8">
-                        <NeonButton variant="green" size='sm' onClick={() => navigate('/')} className="gap-2">
+            <GameOverlay
+                type={gameStatus === 'completed' ? 'level-complete' : 'game-over'}
+                gemsEarned={gameStatus === 'completed' ? currentLevel?.rewards.gems : 0}
+                onRestart={() => selectedLevelId && startGame(selectedLevelId)}
+                onHome={() => setGameStatus('menu')}
+            />
+        );
+    }
+
+    if (gameStatus === 'playing' && currentQuestion) {
+        return (
+            <div className="min-h-screen bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-green-900/20 via-[#0b0c15] to-black py-8 px-4 flex flex-col items-center">
+                <AnimatePresence>
+                    {showMotivation && (
+                        <motion.div
+                            initial={{ scale: 0, y: 50 }}
+                            animate={{ scale: 1.5, y: -100 }}
+                            exit={{ scale: 0, opacity: 0 }}
+                            className="fixed left-1/2 top-1/2 -translate-x-1/2 font-display font-black text-green-400 drop-shadow-[0_0_20px_#4ade80] z-[100] text-4xl pointer-events-none"
+                        >
+                            {showMotivation}
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
+                <div className="max-w-4xl w-full space-y-8">
+                    {/* HUD */}
+                    <div className="flex justify-between items-center bg-black/40 backdrop-blur-md p-4 rounded-2xl border border-white/5 sticky top-0 z-50">
+                        <NeonButton variant="green" size="sm" onClick={() => setGameStatus('menu')} className="gap-2 shrink-0">
                             <ArrowLeft size={16} />
-                            ÇIKIŞ
+                            <span className="hidden sm:inline">VAZGEÇ</span>
                         </NeonButton>
-                        <div className="flex items-center gap-4">
-                            <GlassCard className="px-4 py-2 flex items-center gap-2 !rounded-full bg-green-500/10 border-green-500/30">
-                                <FlaskConical className="text-green-400" size={20} />
-                                <span className="text-green-100 font-bold">{scienceData.title}</span>
-                            </GlassCard>
+
+                        <div className="flex-1 mx-4 sm:mx-8 flex flex-col gap-1">
+                            <div className="flex justify-between text-[10px] sm:text-xs text-green-400/70 font-mono font-bold">
+                                <span>STREAK: {currentStreak}x</span>
+                                <span>{currentQuestionIndex + 1} / {totalQuestions}</span>
+                            </div>
+                            <div className="h-3 bg-white/5 rounded-full overflow-hidden border border-white/10">
+                                <motion.div
+                                    className="h-full bg-gradient-to-r from-green-500 to-emerald-600 shadow-[0_0_10px_#10B981]"
+                                    initial={{ width: 0 }}
+                                    animate={{ width: `${((currentQuestionIndex + 1) / totalQuestions) * 100}%` }}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 bg-red-500/10 px-3 py-1.5 rounded-xl border border-red-500/30">
+                            <div className="animate-pulse text-red-500">❤️</div>
+                            <span className="font-bold text-white font-mono text-lg">{hearts}</span>
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        {scienceData.levels.map((level, index) => {
-                            const { xp } = useGameStore();
-                            const isLocked = xp < level.unlockThreshold;
-
-                            return (
-                                <GlassCard
-                                    key={level.id}
-                                    hoverEffect={!isLocked}
-                                    onClick={() => !isLocked && handleLevelSelect(level.id)}
-                                    className={`group relative overflow-hidden transition-all duration-300 ${isLocked
-                                        ? 'border-white/5 opacity-60 grayscale cursor-not-allowed'
-                                        : 'border-green-500/20 hover:border-green-500/50 cursor-pointer'
-                                        }`}
+                    <GlassCard className="p-8 md:p-12 relative overflow-visible border-green-500/20 min-h-[450px] flex flex-col justify-center text-center">
+                        <AnimatePresence>
+                            {lastBonus > 0 && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 0 }}
+                                    animate={{ opacity: 1, y: -40 }}
+                                    exit={{ opacity: 0 }}
+                                    className="absolute top-4 right-4 text-green-400 font-mono font-bold"
                                 >
-                                    <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
-                                        <Atom size={80} />
-                                    </div>
-                                    <div className="flex flex-col h-full relative z-10">
-                                        <div className="flex justify-between items-start mb-4">
-                                            <div className={`w-10 h-10 rounded-full flex items-center justify-center border font-bold text-xl font-display ${isLocked
-                                                ? 'bg-white/10 border-white/20 text-gray-500'
-                                                : 'bg-green-500/20 border-green-500/30 text-green-400'
-                                                }`}>
-                                                {isLocked ? <div className="i-lucide-lock w-5 h-5" /> : index + 1}
-                                            </div>
-                                            {isLocked && (
-                                                <div className="bg-black/50 px-2 py-1 rounded text-xs text-gray-400 border border-white/10">
-                                                    🔒 {level.unlockThreshold} XP
-                                                </div>
-                                            )}
-                                        </div>
-                                        <h3 className={`text-xl font-bold mb-2 transition-colors ${isLocked ? 'text-gray-400' : 'text-white group-hover:text-green-400'
-                                            }`}>{level.title}</h3>
-                                        <p className="text-sm text-gray-400 mb-4 flex-grow">{level.description}</p>
-                                        <div className="flex items-center gap-2 text-xs text-green-300 bg-green-900/20 w-fit px-2 py-1 rounded-md">
-                                            <Trophy size={12} />
-                                            <span>+{level.rewards.xp} XP</span>
-                                        </div>
-                                    </div>
-                                </GlassCard>
-                            );
-                        })}
-                    </div>
+                                    +{lastBonus} XP HIZ BONUSU! ⚡
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+
+                        <motion.h2
+                            key={currentQuestion.id}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="text-2xl md:text-3xl font-bold text-white mb-12 leading-relaxed"
+                        >
+                            {currentQuestion.text}
+                        </motion.h2>
+
+                        <div className="grid sm:grid-cols-2 gap-4 md:gap-6 w-full max-w-3xl mx-auto">
+                            <AnimatePresence mode='popLayout'>
+                                {currentQuestion.options.map((option, idx) => {
+                                    if (hiddenOptions.includes(idx)) return null;
+
+                                    let btnVariant: any = "green";
+                                    let extraClasses = "";
+
+                                    if (feedback === 'correct' && option === currentQuestion.answer) {
+                                        btnVariant = "green";
+                                        extraClasses = "ring-4 ring-green-400 scale-105 shadow-[0_0_30px_rgba(34,197,94,0.4)]";
+                                    } else if (feedback === 'wrong') {
+                                        if (option === currentQuestion.answer) {
+                                            btnVariant = "green";
+                                            extraClasses = "opacity-100 ring-2 ring-green-400";
+                                        } else {
+                                            extraClasses = "opacity-30 grayscale scale-95";
+                                        }
+                                    }
+
+                                    return (
+                                        <motion.div
+                                            key={`${currentQuestion.id}-${idx}`}
+                                            initial={{ scale: 0.9, opacity: 0 }}
+                                            animate={{ scale: 1, opacity: 1 }}
+                                            transition={{ delay: idx * 0.1 }}
+                                        >
+                                            <NeonButton
+                                                variant={btnVariant}
+                                                fullWidth
+                                                size="lg"
+                                                onClick={() => handleAnswer(option)}
+                                                className={cn("min-h-[80px] font-bold", extraClasses)}
+                                            >
+                                                {option}
+                                            </NeonButton>
+                                        </motion.div>
+                                    );
+                                })}
+                            </AnimatePresence>
+                        </div>
+
+                        {feedback === 'wrong' && currentQuestion.explanation && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="mt-8 p-6 bg-red-500/10 border border-red-500/30 rounded-2xl"
+                            >
+                                <p className="text-red-200 font-medium italic">💡 {currentQuestion.explanation}</p>
+                            </motion.div>
+                        )}
+
+                        {!feedback && (
+                            <div className="mt-12">
+                                <NeonButton
+                                    variant="pink"
+                                    size="sm"
+                                    disabled={isFiftyFiftyUsed}
+                                    onClick={useFiftyFifty}
+                                    className="gap-2"
+                                >
+                                    <Atom size={16} /> 50:50 ({isFiftyFiftyUsed ? 'KULLANILDI' : '5 💎'})
+                                </NeonButton>
+                            </div>
+                        )}
+                    </GlassCard>
                 </div>
             </div>
         );
     }
 
-    const currentQuestion = questions[currentQuestionIndex];
-
     return (
-        <div className="min-h-screen bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-green-900/20 via-[#0b0c15] to-black flex items-center justify-center p-4">
-
-            {(gameStatus === 'completed' || gameStatus === 'failed') && (
-                <GameOverlay
-                    type={gameStatus === 'completed' ? 'level-complete' : 'game-over'}
-                    onRestart={() => {
-                        setGameStatus('playing');
-                        setCurrentQuestionIndex(0);
-                        setScore(0);
-                    }}
-                    onHome={returnToMenu}
-                    gemsEarned={currentLevel?.rewards.gems}
-                />
-            )}
-
-            <div className="max-w-4xl w-full">
-                <div className="flex justify-between items-center mb-8 bg-black/40 backdrop-blur-md p-4 rounded-2xl border border-white/5">
-                    <div className="flex items-center gap-4">
-                        <NeonButton variant="green" size="sm" onClick={returnToMenu}>
-                            <ArrowLeft size={16} />
-                        </NeonButton>
-                        <div className="text-green-400 font-display tracking-wider">
-                            {currentLevel?.title} <span className="text-white/30 mx-2">|</span> Soru {currentQuestionIndex + 1}/{questions.length}
-                        </div>
-                    </div>
-                </div>
-
-                <AnimatePresence mode='wait'>
+        <div className="min-h-screen bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-green-900/40 via-[#0f1020] to-[#050608] p-4 md:p-8">
+            <div className="max-w-6xl mx-auto">
+                <header className="text-center space-y-4 mb-12">
                     <motion.div
-                        key={currentQuestionIndex}
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -20 }}
-                        className="w-full"
+                        initial={{ scale: 0.5, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        className="inline-block p-4 rounded-3xl bg-green-500/20 border-2 border-green-500/50 mb-4"
                     >
-                        <GlassCard className="p-8 md:p-12 relative overflow-hidden border-green-500/20">
-                            <div className="absolute top-4 right-4 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs uppercase tracking-widest font-bold">
-                                <span className={getDifficultyColor(currentQuestion.difficulty)}>{currentQuestion.difficulty || 'Normal'}</span>
-                            </div>
-
-                            <h2 className="text-2xl md:text-4xl font-bold text-white mb-12 text-center leading-relaxed">
-                                {currentQuestion.text}
-                            </h2>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {currentQuestion.options.map((option, idx) => {
-                                    const isCorrectAnswer = option === currentQuestion.answer;
-                                    let variant: 'green' | 'red' | 'cyan' = 'green';
-                                    let opacity = 'opacity-100';
-
-                                    if (showResult) {
-                                        if (isCorrectAnswer) {
-                                            variant = 'green';
-                                        } else {
-                                            opacity = 'opacity-50';
-                                            variant = 'red';
-                                        }
-                                    }
-
-                                    return (
-                                        <NeonButton
-                                            key={idx}
-                                            variant={variant}
-                                            className={`h-20 text-lg md:text-xl ${opacity} transition-all duration-300`}
-                                            onClick={() => handleAnswer(option)}
-                                            disabled={showResult !== null}
-                                            fullWidth
-                                        >
-                                            {option}
-                                        </NeonButton>
-                                    );
-                                })}
-                            </div>
-
-                            {showResult === 'incorrect' && (
-                                <motion.div
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    className="mt-6 text-center"
-                                >
-                                    <p className="text-red-400 font-bold text-xl mb-1">Yanlış Cevap!</p>
-                                    <p className="text-white/70">Doğru cevap: <span className="text-green-400 font-bold">{currentQuestion.answer}</span></p>
-                                    {currentQuestion.explanation && (
-                                        <p className="text-sm text-white/50 mt-2">{currentQuestion.explanation}</p>
-                                    )}
-                                </motion.div>
-                            )}
-
-                        </GlassCard>
+                        <FlaskConical className="text-green-400 w-12 h-12" />
                     </motion.div>
-                </AnimatePresence>
+                    <h1 className="text-6xl font-black font-display text-white italic drop-shadow-[0_0_15px_rgba(34,197,94,0.5)]">
+                        FEN <span className="text-green-400">GALAKSİSİ</span>
+                    </h1>
+                    <p className="text-xl text-green-200/70 font-medium tracking-wide">
+                        Doğayı, vücudumuzu ve bilimi keşfetmeye hazır mısın?
+                    </p>
+                    <div className="flex justify-center mt-6">
+                        <NeonButton variant="green" size="sm" onClick={() => navigate('/')}>
+                            <ArrowLeft size={16} className="mr-2" /> ANA ÜSE DÖN
+                        </NeonButton>
+                    </div>
+                </header>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {scienceData.levels.map((level, index) => {
+                        const isLocked = xp < (level.unlockThreshold || 0);
+
+                        return (
+                            <motion.div
+                                key={level.id}
+                                whileHover={!isLocked ? { scale: 1.02, y: -5 } : {}}
+                                whileTap={!isLocked ? { scale: 0.98 } : {}}
+                            >
+                                <GlassCard className={cn(
+                                    "group h-full flex flex-col p-8 border-2 transition-all duration-500",
+                                    isLocked ? "border-white/5 opacity-50" : "border-green-500/20 hover:border-green-500/50 bg-green-900/10"
+                                )}>
+                                    <div className="flex justify-between items-start mb-6">
+                                        <div className={cn(
+                                            "w-16 h-16 rounded-2xl flex items-center justify-center text-3xl shadow-lg border-2",
+                                            isLocked ? "bg-white/5 border-white/10 text-white/20" : "bg-green-500/20 border-green-500/30 text-green-400"
+                                        )}>
+                                            {isLocked ? <div className="i-lucide-lock w-7 h-7" /> : <span>{index + 1}</span>}
+                                        </div>
+                                        <div className="flex flex-col items-end gap-1">
+                                            <div className="px-3 py-1 rounded-full bg-green-400/10 border border-green-400/30 text-green-400 text-xs font-bold">
+                                                {level.rewards.xp} XP + {level.rewards.gems} 💎
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <h3 className="text-2xl font-bold text-white mb-3 group-hover:text-green-400 transition-colors">
+                                        {level.title}
+                                    </h3>
+                                    <p className="text-green-200/60 mb-8 flex-grow leading-relaxed">
+                                        {level.description}
+                                    </p>
+
+                                    {isLocked ? (
+                                        <div className="space-y-3">
+                                            <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+                                                <div
+                                                    className="h-full bg-green-500/20"
+                                                    style={{ width: `${(xp / level.unlockThreshold!) * 100}%` }}
+                                                />
+                                            </div>
+                                            <p className="text-xs text-center font-bold text-white/40 uppercase tracking-widest">
+                                                {level.unlockThreshold} XP GEREKLİ
+                                            </p>
+                                        </div>
+                                    ) : (
+                                        <NeonButton
+                                            variant="green"
+                                            fullWidth
+                                            size="lg"
+                                            onClick={() => startGame(level.id)}
+                                            className="gap-2 shadow-[0_4px_20px_rgba(34,197,94,0.2)]"
+                                        >
+                                            KEŞFETMEYE BAŞLA
+                                        </NeonButton>
+                                    )}
+                                </GlassCard>
+                            </motion.div>
+                        );
+                    })}
+                </div>
             </div>
         </div>
     );

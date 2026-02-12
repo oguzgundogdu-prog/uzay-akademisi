@@ -70,6 +70,22 @@ export const englishData: ModuleData = {
                     options: ['Yellow', 'Green', 'Purple', 'Pink'],
                     type: 'multiple-choice',
                     difficulty: 'medium'
+                },
+                {
+                    id: 'q5-1',
+                    text: 'Hangi sayı "Zero" dur?',
+                    answer: 0,
+                    options: [0, 1, 10, 100],
+                    type: 'multiple-choice',
+                    difficulty: 'easy'
+                },
+                {
+                    id: 'q5-2',
+                    text: '"Pink" hangi renktir?',
+                    answer: 'Pembe',
+                    options: ['Pembe', 'Mor', 'Turuncu', 'Gri'],
+                    type: 'multiple-choice',
+                    difficulty: 'easy'
                 }
             ]
         },
@@ -78,7 +94,7 @@ export const englishData: ModuleData = {
             title: 'Animals & Family',
             description: 'Hayvanları ve aile üyelerini tanıyalım.',
             order: 2,
-            unlockThreshold: 40,
+            unlockThreshold: 100,
             rewards: { xp: 120, gems: 20 },
             questions: [
                 {
@@ -120,6 +136,22 @@ export const englishData: ModuleData = {
                     options: ['Bird', 'Dog', 'Cat', 'Fish'],
                     type: 'multiple-choice',
                     difficulty: 'medium'
+                },
+                {
+                    id: 'q10-1',
+                    text: '"Lion" hangi hayvandır?',
+                    answer: 'Aslan',
+                    options: ['Kaplan', 'Aslan', 'Ayı', 'Kurt'],
+                    type: 'multiple-choice',
+                    difficulty: 'medium'
+                },
+                {
+                    id: 'q10-2',
+                    text: '"Sister" ne demektir?',
+                    answer: 'Kız Kardeş',
+                    options: ['Erkek Kardeş', 'Kız Kardeş', 'Teyze', 'Hala'],
+                    type: 'multiple-choice',
+                    difficulty: 'medium'
                 }
             ]
         },
@@ -128,7 +160,7 @@ export const englishData: ModuleData = {
             title: 'School Objects',
             description: 'Sınıfımızdaki eşyaları öğrenelim.',
             order: 3,
-            unlockThreshold: 60,
+            unlockThreshold: 220,
             rewards: { xp: 150, gems: 25 },
             questions: [
                 {
@@ -170,6 +202,14 @@ export const englishData: ModuleData = {
                     options: ['Öğrenci', 'Doktor', 'Polis', 'Pilot'],
                     type: 'multiple-choice',
                     difficulty: 'easy'
+                },
+                {
+                    id: 'q15-1',
+                    text: '"Eraser" nedir?',
+                    answer: 'Silgi',
+                    options: ['Kalem', 'Silgi', 'Kitap', 'Defter'],
+                    type: 'multiple-choice',
+                    difficulty: 'medium'
                 }
             ]
         },
@@ -178,7 +218,7 @@ export const englishData: ModuleData = {
             title: 'Greetings',
             description: 'Selamlaşma ve basit cümleler.',
             order: 4,
-            unlockThreshold: 80,
+            unlockThreshold: 370,
             rewards: { xp: 200, gems: 30 },
             questions: [
                 {
@@ -220,6 +260,82 @@ export const englishData: ModuleData = {
                     options: ['Tahtayı temizle', 'Kapıyı aç', 'Pencereyi kapat', 'Otur'],
                     type: 'multiple-choice',
                     difficulty: 'hard'
+                },
+                {
+                    id: 'q20-1',
+                    text: '"Good Bye" ne demektir?',
+                    answer: 'Hoşçakal',
+                    options: ['Merhaba', 'Hoşçakal', 'Günaydın', 'Tünaydın'],
+                    type: 'multiple-choice',
+                    difficulty: 'easy'
+                }
+            ]
+        },
+        {
+            id: 'eng-5',
+            title: 'My Body',
+            description: 'Vücudumuzun bölümlerini öğrenelim.',
+            order: 5,
+            unlockThreshold: 570,
+            rewards: { xp: 250, gems: 35 },
+            questions: [
+                {
+                    id: 'q21',
+                    text: '"Head" ne demektir?',
+                    answer: 'Baş / Kafa',
+                    options: ['Baş / Kafa', 'Kol', 'Bacak', 'El'],
+                    type: 'multiple-choice',
+                    difficulty: 'easy'
+                },
+                {
+                    id: 'q22',
+                    text: '"Hand" ne demektir?',
+                    answer: 'El',
+                    options: ['Ayak', 'El', 'Parmak', 'Omuz'],
+                    type: 'multiple-choice',
+                    difficulty: 'easy'
+                },
+                {
+                    id: 'q23',
+                    text: '"Eye" ne demektir?',
+                    answer: 'Göz',
+                    options: ['Burun', 'Kulak', 'Göz', 'Ağız'],
+                    type: 'multiple-choice',
+                    difficulty: 'easy'
+                }
+            ]
+        },
+        {
+            id: 'eng-6',
+            title: 'Food & Drinks',
+            description: 'Yiyecek ve içecekler.',
+            order: 6,
+            unlockThreshold: 820,
+            rewards: { xp: 300, gems: 40 },
+            questions: [
+                {
+                    id: 'q24',
+                    text: '"Apple" hangi meyvedir?',
+                    answer: 'Elma',
+                    options: ['Armut', 'Elma', 'Muz', 'Çilek'],
+                    type: 'multiple-choice',
+                    difficulty: 'easy'
+                },
+                {
+                    id: 'q25',
+                    text: '"Water" ne demektir?',
+                    answer: 'Su',
+                    options: ['Süt', 'Meyve suyu', 'Su', 'Çay'],
+                    type: 'multiple-choice',
+                    difficulty: 'easy'
+                },
+                {
+                    id: 'q26',
+                    text: '"Milk" ne demektir?',
+                    answer: 'Süt',
+                    options: ['Yoğurt', 'Peynir', 'Süt', 'Ekmek'],
+                    type: 'multiple-choice',
+                    difficulty: 'easy'
                 }
             ]
         }

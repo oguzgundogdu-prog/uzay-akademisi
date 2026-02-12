@@ -18,7 +18,11 @@ interface GameState {
     completedNodes: string[]; // Node IDs for the map
     currentUnit: string;
 
-    addXp: (amount: number) => void;
+    // v2.1 Streak & Combo
+    currentStreak: number;
+    bestStreak: number;
+
+    addXp: (amount: number, multiplier?: number) => void;
     addBadge: (badge: string) => void;
     completeMission: (missionId: string) => void;
     updateStudyTime: (seconds: number) => void;
@@ -29,6 +33,10 @@ interface GameState {
     restoreHearts: () => void;
     addGem: (amount: number) => void;
     unlockNode: (nodeId: string) => void;
+
+    // v2.1 Streak Actions
+    incrementStreak: () => void;
+    resetStreak: () => void;
 }
 
 export const useGameStore = create<GameState>()(
@@ -50,8 +58,13 @@ export const useGameStore = create<GameState>()(
             completedNodes: ['start'], // Start node unlocked by default
             currentUnit: 'unit-1',
 
-            addXp: (amount) => set((state) => {
-                const newXp = state.xp + amount;
+            // v2.1 Defaults
+            currentStreak: 0,
+            bestStreak: 0,
+
+            addXp: (amount, multiplier = 1) => set((state) => {
+                const totalAmount = amount * multiplier;
+                const newXp = state.xp + totalAmount;
                 const newLevel = Math.floor(newXp / 1000) + 1;
 
                 // Badge Logic Checks
@@ -83,25 +96,21 @@ export const useGameStore = create<GameState>()(
 
             markQuestionSeen: (questionId) => set((state) => {
                 if (state.seenQuestions.includes(questionId)) return state;
-                // Keep only last 100 questions to avoid large state
                 const newSeen = [...state.seenQuestions, questionId];
-                if (newSeen.length > 200) newSeen.shift(); // Increased limit
+                if (newSeen.length > 200) newSeen.shift();
                 return { seenQuestions: newSeen };
             }),
 
             // v2.0 Action Implementations
             useHeart: () => {
                 const state = get();
-                // Check regeneration first
                 const now = Date.now();
                 const timeDiff = now - state.lastHeartRegen;
-                const heartsToRegen = Math.floor(timeDiff / (15 * 60 * 1000)); // 1 heart every 15 mins
+                const heartsToRegen = Math.floor(timeDiff / (15 * 60 * 1000));
 
                 let currentHearts = state.hearts;
                 if (heartsToRegen > 0) {
                     currentHearts = Math.min(state.maxHearts, currentHearts + heartsToRegen);
-                    // Update timestamp but keep remainder
-                    // This logic is simplified; for a real game, would need more robust timer state
                     set({ lastHeartRegen: now, hearts: currentHearts });
                 }
 
@@ -120,6 +129,17 @@ export const useGameStore = create<GameState>()(
                 if (state.completedNodes.includes(nodeId)) return state;
                 return { completedNodes: [...state.completedNodes, nodeId] };
             }),
+
+            // v2.1 Streak Implementations
+            incrementStreak: () => set((state) => {
+                const nextStreak = state.currentStreak + 1;
+                return {
+                    currentStreak: nextStreak,
+                    bestStreak: Math.max(state.bestStreak, nextStreak)
+                };
+            }),
+
+            resetStreak: () => set({ currentStreak: 0 }),
         }),
         {
             name: 'uzay-akademisi-v2-storage',

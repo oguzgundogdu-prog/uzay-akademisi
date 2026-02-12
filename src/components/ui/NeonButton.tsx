@@ -20,33 +20,34 @@ export const NeonButton: React.FC<NeonButtonProps> = ({
     fullWidth = false,
     disabled = false
 }) => {
-    const baseStyles = "relative group font-display font-bold tracking-wider transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed";
+    const baseStyles = "relative group font-sans font-bold transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed";
 
     const variants = {
-        cyan: "text-black bg-neon-cyan hover:bg-neon-cyan/80 shadow-[0_0_20px_rgba(0,240,255,0.5)] hover:shadow-[0_0_40px_rgba(0,240,255,0.7)]",
-        pink: "text-white bg-neon-pink hover:bg-neon-pink/80 shadow-[0_0_20px_rgba(255,0,153,0.5)] hover:shadow-[0_0_40px_rgba(255,0,153,0.7)]",
-        gold: "text-black bg-neon-gold hover:bg-neon-gold/80 shadow-[0_0_20px_rgba(255,215,0,0.5)] hover:shadow-[0_0_40px_rgba(255,215,0,0.7)]",
-        green: "text-black bg-neon-green hover:bg-neon-green/80 shadow-[0_0_20px_rgba(0,255,157,0.5)] hover:shadow-[0_0_40px_rgba(0,255,157,0.7)]",
-        red: "text-white bg-neon-red hover:bg-neon-red/80 shadow-[0_0_20px_rgba(255,0,85,0.5)] hover:shadow-[0_0_40px_rgba(255,0,85,0.7)]",
-        blue: "text-white bg-neon-blue hover:bg-neon-blue/80 shadow-[0_0_20px_rgba(41,121,255,0.5)] hover:shadow-[0_0_40px_rgba(41,121,255,0.7)]",
+        cyan: "text-black bg-neon-cyan hover:bg-neon-cyan/80 shadow-[0_0_20px_rgba(0,240,255,0.4)] hover:shadow-[0_0_40px_rgba(0,240,255,0.6)]",
+        pink: "text-white bg-neon-pink hover:bg-neon-pink/80 shadow-[0_0_20px_rgba(255,0,153,0.4)] hover:shadow-[0_0_40px_rgba(255,0,153,0.6)]",
+        gold: "text-black bg-neon-gold hover:bg-neon-gold/80 shadow-[0_0_20px_rgba(255,215,0,0.4)] hover:shadow-[0_0_40px_rgba(255,215,0,0.6)]",
+        green: "text-black bg-neon-green hover:bg-neon-green/80 shadow-[0_0_20px_rgba(0,255,157,0.4)] hover:shadow-[0_0_40px_rgba(0,255,157,0.6)]",
+        red: "text-white bg-neon-red hover:bg-neon-red/80 shadow-[0_0_20px_rgba(255,0,85,0.4)] hover:shadow-[0_0_40px_rgba(255,0,85,0.6)]",
+        blue: "text-white bg-neon-blue hover:bg-neon-blue/80 shadow-[0_0_20px_rgba(41,121,255,0.4)] hover:shadow-[0_0_40px_rgba(41,121,255,0.6)]",
     };
 
     const sizes = {
-        sm: 'px-4 py-2 text-sm',
-        md: 'px-6 py-3 text-base',
-        lg: 'px-8 py-4 text-lg font-bold',
+        sm: 'px-3 py-1.5 text-sm',
+        md: 'px-5 py-2.5 text-base',
+        lg: 'px-6 py-4 text-lg md:text-xl font-bold',
     };
 
     return (
         <motion.button
-            whileHover={!disabled ? { scale: 1.05 } : {}}
-            whileTap={!disabled ? { scale: 0.95 } : {}}
+            whileHover={!disabled ? { scale: 1.02 } : {}}
+            whileTap={!disabled ? { scale: 0.98 } : {}}
             className={`
                 ${baseStyles}
-                overflow-hidden
-                border-2 rounded-lg uppercase
-                shadow-[0_0_15px_rgba(0,0,0,0.5)]
+                overflow-visible
+                border-2 rounded-2xl
+                shadow-[0_0_15px_rgba(0,0,0,0.3)]
                 backdrop-blur-sm
+                transition-all
                 ${variants[variant]}
                 ${sizes[size]}
                 ${fullWidth ? 'w-full' : ''}
@@ -56,7 +57,7 @@ export const NeonButton: React.FC<NeonButtonProps> = ({
             onClick={!disabled ? onClick : undefined}
             disabled={disabled}
         >
-            <span className="relative z-10 flex items-center justify-center gap-2">
+            <span className="relative z-10 flex items-center justify-center gap-2 text-center leading-tight">
                 {children}
             </span>
         </motion.button>

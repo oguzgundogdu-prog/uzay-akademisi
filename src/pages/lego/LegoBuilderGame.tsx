@@ -130,9 +130,11 @@ export const LegoBuilderGame = () => {
         }
     };
 
-    if (questions.length === 0) return null; // Loading state
+    if (questions.length === 0) return <div className="min-h-screen bg-black flex items-center justify-center text-white">Sorular Hazırlanıyor...</div>;
 
     const currentQuestion = questions[currentQuestionIndex];
+
+    if (!currentQuestion) return <div className="min-h-screen bg-black flex items-center justify-center text-white">Hata: Soru bulunamadı.</div>;
 
     return (
         <div className="min-h-screen bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-orange-900/40 via-[#1a1025] to-black p-4 flex flex-col md:flex-row gap-4 items-center justify-center">
